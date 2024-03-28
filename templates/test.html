@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %} Tester {% endblock %}
+
+{% block main %}
+    <h1>Tests</h1>
+    <ul>
+        {% for user in users %}
+            <li>{{ user  }}</li>
+        {% endfor %}
+    </ul>
+
+
+
+{% endblock %}
