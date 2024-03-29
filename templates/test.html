@@ -5,13 +5,26 @@
 {% block main %}
     <h1>Tests</h1>
     <ul>
-        <li>{{ user }}</li>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone Number</th>
+            </tr>
         {% for user in users %}
-            <li>{{ user }}</li>
+
+
+                <tr>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.phone_number }}</td>
+                    <td>{{ user.address }}</td>
+
+
+                </tr>
+
+
         {% endfor %}
-
+    </table>
     </ul>
-
-
-
 {% endblock %}
