@@ -66,35 +66,32 @@ def register():
         username = request.form['username']
         password = request.form['password']
         confirm_password = request.form['confirm-password']
+        name = request.form['name']
+        address = request.form['address']
+        phone_number = request.form['phone-number']
+
+        print(password, confirm_password, name, address, phone_number)
 
         if confirm_password == password:
-            new_user = User(username=username, hash=generate_password_hash(password), role=0, name = 'admin', phone_number = '111', address = 'wasd')
+            new_user = User(username=username, hash=generate_password_hash(password), role=0, name = name, phone_number = phone_number, address = address)
 
-            #try:
-            db.session.add(new_user)
-            db.session.commit()
-            #except:
-                #return render_template('error.html', err_msg="There was an unexpected error registering the account") 
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                print("made it", new_user)
+            except:
+                return render_template('error.html', err_msg="There was an unexpected error registering the account") 
         elif confirm_password != password:
+            print("password wrong")
             flash("Passwords do not match")
             return redirect('/register')
         return redirect('/') 
     return render_template('register.html')
 
-
-# if we find nothing, redirect to register 2 page 
-
-
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     session.clear()
 
-    # if admin:
-    #     redirect admin side
-    # else:
-    #     redirect member side
 
     if request.method == 'POST':
         username = request.form['username']
@@ -126,11 +123,11 @@ def logout():
     session.pop('username', None)
     return redirect('/')
 
-# @app.route('/test')
-# def test():
-#     users = db.session.query(User).all()
-#     users = db.session.query(User).filter_by(username="admin")
-#     for user in users:
-#         print(user.name)
-#         print(user.hash)
-#     return render_template('test.html', users=users)
+@app.route('/test')
+def test():
+    users = db.session.query(User).all()
+    users = db.session.query(User).filter_by(username="admin")
+    for user in users:
+        print(user.name)
+        print(user.hash)
+    return render_template('test.html', users=users)

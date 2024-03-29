@@ -5,9 +5,11 @@
 {% block main %}
     <h1>Tests</h1>
     <ul>
+        <li>{{ user }}</li>
         {% for user in users %}
-            <li>{{ user  }}</li>
+            <li>{{ user }}</li>
         {% endfor %}
+
     </ul>
 
 
