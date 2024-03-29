@@ -116,8 +116,6 @@ def dashboard():
     username = session['username']
     return f"Welcome, {username}! This is your dashboard."
 
-
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
@@ -126,7 +124,6 @@ def logout():
 @app.route('/test')
 def test():
     users = db.session.query(User).all()
-    users = db.session.query(User).filter_by(username="admin")
     for user in users:
         print(user.name)
         print(user.hash)
