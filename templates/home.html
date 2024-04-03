@@ -2,23 +2,7 @@
 {% block title %} The Improv Spot {% endblock %}
 
 {% block main %}
-    <header>
-        <h1 class="display-3">The Improv Spot</h1>
-        <h2 class="h5"> IMPROVing your life one class at a time!</h2>
-        <ul class="nav justify-content-left">
-            <li class="nav-item">
-              <a class="nav-link active" href="#"><i class="fas fa-home"></i></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/login">Login/Register</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">About</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="#" tabindex="-1" aria-disabled="true">Contact</a>
-            </li>
-          </ul>
-
-      </header>
+  {% if session['username'] %}
+    <p>Welcome, {{ session['username'] }} </p>
+  {% endif %}
 {% endblock %}
