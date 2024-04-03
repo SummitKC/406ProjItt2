@@ -1,3 +1,4 @@
+from helpers import login_required, get_key, send_mail
 import datetime
 from functools import wraps
 from flask import Flask, flash, render_template, request, redirect, session, url_for
@@ -6,21 +7,13 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "0x5e82921a8060"
+app.secret_key = get_key()
 app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///database.db'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 db = SQLAlchemy(app)
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session.get('user_id') is None:
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
