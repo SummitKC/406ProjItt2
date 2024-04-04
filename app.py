@@ -42,37 +42,27 @@ class Admins(db.Model):
 
 class Finances(db.Model):
     month_year = db.Column(db.Date, primary_key=True)
-    income_users = db.Column(db.Integer, default=0) #-> users is class participants (feel free to change the name)
-    income_other = db.Column(db.Integer, default=0)
-    expenses_coach = db.Column(db.Integer, default=0)
-    expenses_hall  = db.Column(db.Integer, default=0)
-    expenses_other = db.Column(db.Integer, default=0)
+    profit = db.Column(db.Integer) # Change name in db to income just for more clarity
+    expenses = db.Column(db.Integer) # split expenses & income into multiple categories
+    #income_users = db.Column(db.Integer, default=0) #-> users is class participants (feel free to change the name)
+    #income_other = db.Column(db.Integer, default=0)
+    #expenses_coach = db.Column(db.Integer, default=0)
+    #expenses_hall  = db.Column(db.Integer, default=0)
+    #expenses_other = db.Column(db.Integer, default=0)
 
-    def addUserIncome(self, amount: int, type: str):
-        if type == 'u':
-            self.income_users += amount
-        elif type == 'o':
-            self.income_other += amount
+    #def addUserIncome(self, amount: int, type: str):
+    #    if type == 'u':
+    #        self.income_users += amount
+    #    elif type == 'o':
+    #        self.income_other += amount
 
-    def add_expenses(self, amount: int, type: str):
-        if type == 'c':
-            self.expenses_coach += amount
-        elif type == 'h':
-            self.expenses_hall += amount
-        elif type == 'o':
-            self.expenses_other += amount
-
-    def calculate_total_income(self): 
-        return self.income_users + self.income_other
-    
-    def calculate_total_expenses(self): 
-        return self.expenses_coach + self.expenses_hall + self.expenses_other 
-    
-    def calculate_profit(self):
-        return self.calculate_total_income()  - self.calculate_total_expenses()
-
-    def monthInformation(self): 
-        return
+    #def add_expenses(self, amount: int, type: str):
+    #    if type == 'c':
+    #        self.expenses_coach += amount
+    #    elif type == 'h':
+    #        self.expenses_hall += amount
+    #    elif type == 'o':
+    #        self.expenses_other += amount
 
     def __repr__(self) -> str:
         return f'| MM/YYYY: {self.month_year} | Income: {self.calculate_total_income()} | Expenses: {self.calculate_total_expenses()} | Profit: {self.calculate_profit()}'
@@ -172,3 +162,19 @@ def test():
         print(user.name)
         print(user.hash)
     return render_template('test.html', users=users)
+
+
+@app.route('/finance')
+def finance():
+    # if you want to add some dates just un comment this
+    #db.session.add(Finance(month_year = datetime.datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),profit = randint(1000, 10000), expenses = randint(1000, 10000)))
+    #db.session.add(Finance(month_year = datetime.datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),profit = randint(1000, 10000), expenses = randint(1000, 10000)))
+    #db.session.add(Finance(month_year = datetime.datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),profit = randint(1000, 10000), expenses = randint(1000, 10000)))
+    #db.session.add(Finance(month_year = datetime.datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),profit = randint(1000, 10000), expenses = randint(1000, 10000)))
+    #db.session.add(Finance(month_year = datetime.datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),profit = randint(1000, 10000), expenses = randint(1000, 10000)))
+    #db.session.commit()
+    #calculate_profit = helpers.calculate_profit
+
+    finance_info = db.session.query(Finance).all()
+    
+    return render_template('finance.html', finance_info=finance_info, helpers=helpers)
