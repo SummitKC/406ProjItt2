@@ -79,3 +79,10 @@ header h2 {
   left: 20px; 
   padding: 10px; 
 }
+
+.table { 
+    table {
+        border: 1px solid;
+        text-align: center;
+      }
+}
