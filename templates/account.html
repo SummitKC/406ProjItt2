@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %} Account {% endblock %}
+
+{% block main %}
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Registration</th>
+            </tr>
+        </thead>
+        
+        {% for week in weeks %}
+            <tr>
+                <td>Week {{ week }}</td>
+                <td>
+                    <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
+                        <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        function confirmUpdate(week, price) {
+            // Display a confirmation dialog
+            var msg = "Are you sure you want to register for week " + week + " for $" + price + "?";
+            var confirmed = confirm(msg);
+            return confirmed;
+        }
+    </script>
+
+{% endblock %}

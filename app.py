@@ -1,10 +1,11 @@
-from traitlets import default
+import time
 from helpers import login_required, get_key, send_mail
 from datetime import datetime, date
 from functools import wraps
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -20,18 +21,28 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(30), unique=True, nullable=False)
     hash = db.Column(db.String, nullable=False)
-    role = db.Column(db.Integer, nullable=False) # 0=member, 1=admin
     name = db.Column(db.String(50), nullable=False)
     phone_number = db.Column(db.String)
     address = db.Column(db.String)
     total_payments = db.Column(db.Integer)
-    current_payment = db.Column(db.Integer)
+    current_payment = db.Column(db.Integer) # how much the user currently pays for a class
     weekly_status = db.Column(db.JSON)  # Storing a dictionary as JSON
 
+    def add_total_payments(self):
+        self.total_payments += self.current_payment
+        db.session.commit()
 
-# TODO remove the hash 
+    def update_weekly_status(self, week_number, attendance):
+        if not self.weekly_status:
+            self.weekly_status = {}
+        self.weekly_status[week_number] = (attendance, self.current_payment)
+        flag_modified(self, "weekly_status")
+        db.session.add(self)
+        db.session.commit()
+
+    # TODO remove the hash 
     def __repr__(self) -> str:
-        return f'UID: {self.id}, User {self.username}, Hash: {self.hash}| Name: {self.name} | Phone Number: {self.phone_number} | Address: {self.address} |'
+        return f'UID: {self.id}, User {self.username}, Hash: {self.hash}| Name: {self.name} | Phone Number: {self.phone_number} | Address: {self.address} | Status: {self.weekly_status}'
 
 class Admins(db.Model):
 
@@ -53,6 +64,7 @@ class Finances(db.Model):
             self.income_users += amount
         elif type == 'o':
             self.income_other += amount
+        db.session.commit()
 
     def add_expenses(self, amount: int, type: str):
         if type == 'c':
@@ -75,13 +87,44 @@ class Finances(db.Model):
         return
 
     def __repr__(self) -> str:
-        return f'| MM/YYYY: {self.month_year} | Income: {self.calculate_total_income()} | Expenses: {self.calculate_total_expenses()} | Profit: {self.calculate_profit()}'
+        return f'| YYYY/MM/DD: {self.month_year} | Income: {self.calculate_total_income()} | Expenses: {self.calculate_total_expenses()} | Profit: {self.calculate_profit()}'
 
 
 @app.route('/')
 # @login_required <-- TODO uncomment this when everything is done
 def home():
     return render_template('home.html')
+
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    if request.method == 'POST':
+        cardNumber = request.form['card_number']
+        cardNumber = cardNumber.replace('\t', '')[::-1]
+        sumOddDigit = 0
+        sumEvenDigit = 0
+        for number in cardNumber[::2]:
+            sumOddDigit += int(number)
+
+        for number in cardNumber[1::2]:
+            number = int(number) * 2
+            if number > 9: 
+                quotient = number // 10 
+                remainder = number % 10  
+                sumEvenDigit += (quotient + remainder)
+            
+            else: 
+                sumEvenDigit += number
+
+        total = sumEvenDigit + sumOddDigit 
+
+        if total % 10 == 0: 
+            flash ('wasd')
+            return redirect('/')
+        else: 
+            flash("Please wait")
+            return redirect('/payment')
+  
+    return render_template('payment.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -96,7 +139,10 @@ def register():
         print(password, confirm_password, name, address, phone_number)
 
         if confirm_password == password:
-            new_user = User(username=username, hash=generate_password_hash(password), role=0, name = name, phone_number = phone_number, address = address)
+            new_user = User(username=username, hash=generate_password_hash(password), 
+                            name = name, phone_number = phone_number, address = address,
+                            total_payments=0, current_payment=10, weekly_status={}
+                            )
 
             try:
                 db.session.add(new_user)
@@ -118,25 +164,22 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        users = db.session.query(User).filter_by(username=username)
-        # users would only ever have 1 or 0 items. therefore a loop is a quick and easy way to check if user is in db
-        for user in users:
-            if check_password_hash(user.hash, password):
-                session['user_id'] = user.id
-                session['username'] = user.username
-                return redirect('/dashboard')    
-            
-        #TODO: change this to give a popup notifying the user instead of redirecting them
-        return render_template('error.html', err_msg="Incorrect Username or Password")
+        user = db.session.query(User).filter_by(username=username).first()
+        if user and check_password_hash(user.hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect('/') 
+        else:
+            #TODO: change this to give a popup notifying the user instead of redirecting them
+            return render_template('error.html', err_msg="Incorrect Username or Password")
     else:
         return render_template('login.html')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    username = session['username']
-    return f"Welcome, {username}! This is your dashboard."
-
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+    
 @app.route('/admin') # TODO add admin login later  
 def yearToDate():
     ytd = db.session.query(Finances).all()
@@ -146,29 +189,58 @@ def yearToDate():
 
     return render_template('adminSide.html', ytdTotal = ytdTotal)
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect('/')
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    username = session['username']
+    return f"Welcome, {username}! This is your dashboard."
+
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    if request.method == 'POST':
+        # payments; week_to_pay = week number, not the amount paid
+        week_to_pay = list(request.form.keys())[0]
+        d = datetime.today()
+        # query both finance and user side
+        finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        # finance side
+        finance.addUserIncome(user.current_payment, 'u')
+        # user side
+        user.total_payments += user.current_payment
+        user.update_weekly_status(week_to_pay, 'attended')
+
+        return render_template('account.html', weeks=[1,2,3,4], payment=user.current_payment)
+    else:
+        # TODO: update to use render_template(account.html) when ready
+        return render_template('account.html', weeks=[1,2,3,4], payment=session['payment'])
+
+@app.route('/finance')
+def finance():
+    finance_info = db.session.query(Finances).all()
+    return render_template('finance.html', lt_profit=100, lt_income=200, lt_expenses=100, finance_info=finance_info)
 
 @app.route('/test')
 def test():
 
-    d = datetime.today()
+    # d = datetime.today()
     # new_finance = Finances(month_year=date(d.year, d.month, 1), 
     #                        income_users=1000, expenses_hall=500)
     # db.session.add(new_finance)
     # db.session.commit()
 
-    ytd = db.session.query(Finances).first()
+    # ytd = db.session.query(Finances).first()
     # print(ytd.month_year.year == mmyy.year and ytd.month_year.month == mmyy.month)
     # print(ytd.month_year, type(ytd.month_year))
     # print(ytd.month_year, date(d.year, d.month, 1), ytd.month_year == date(d.year, d.month, 1))
-    byMonthYear = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
-    print(byMonthYear)
+    # byMonthYear = db.session.query(Finances).filter_by(month_year=date(d.year, 5, 1)).first()
+    # print(byMonthYear)
 
     users = db.session.query(User).all()
     for user in users:
         print(user.name)
-        print(user.hash)
+        print(user.weekly_status, type(user.weekly_status))
     return render_template('test.html', users=users)
+
+
