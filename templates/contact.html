@@ -2,19 +2,27 @@
 {% block title %} The Improv Spot {% endblock %}
 
 {% block main %}
+    <div class="container">
+        <form method="post">
+            <br>
+            <div class="mb-3">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" required></input>
+            </div>
+            <br>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" required></input>
+              </div>
+            <br>
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <textarea class="form-control" id="message" rows="0"></textarea>
+            </div>
 
-    <form method="post">
-        <label for="name">Your Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
-
-        <label for="email">Your Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-
-        <label for="message">Message:</label>
-        <textarea id="message" name="message" rows="4" required></textarea><br><br>
-
-        <button type="submit">Send Message</button>
-    </form>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+        </form>
+    </div>
 </body>
 </html>
 
