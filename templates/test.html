@@ -3,29 +3,32 @@
 {% block title %} Tester {% endblock %}
 
 {% block main %}
-    <h1>Member Information</h1>
-    <ul>
-        <table class="table">
-            <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Address</th>
-                <th>Phone Number</th>
-            </tr>
-        {% for user in users %}
-
-
+    <div class="container">
+        <h1>Member Information</h1>
+        <ul>
+            <table class="table">
                 <tr>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.phone_number }}</td>
-                    <td>{{ user.address }}</td>
-
-
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                    <th>{{ sortCriteria }}</tr>
                 </tr>
+            {% for user in users %}
 
 
-        {% endfor %}
-    </table>
-    </ul>
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td>{{ user[1] }}</td>
+                        <td>{{ user[2] }}</td>
+                        <td>{{ user[3] }}</td>
+                        <td>{{ user[4] }}</td>
+
+                    </tr>
+
+
+            {% endfor %}
+        </table>
+        </ul>
+    </div>
 {% endblock %}
