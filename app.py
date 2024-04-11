@@ -244,7 +244,6 @@ def dashboard():
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
-    #weeks = range(10)
     if request.method == 'POST':
         # payments; week_to_pay = week number, not the amount paid
         week_to_pay = list(request.form.keys())[0]
@@ -279,33 +278,41 @@ def finance():
 
 @app.route('/test')
 def test():
-
-    # d = datetime.today()
-    # new_finance = Finances(month_year=date(d.year, d.month, 1), 
-    #                        income_users=1000, expenses_hall=500)
-    # db.session.add(new_finance)
-    # db.session.commit()
-
-    # ytd = db.session.query(Finances).first()
-    # print(ytd.month_year.year == mmyy.year and ytd.month_year.month == mmyy.month)
-    # print(ytd.month_year, type(ytd.month_year))
-    # print(ytd.month_year, date(d.year, d.month, 1), ytd.month_year == date(d.year, d.month, 1))
-    # byMonthYear = db.session.query(Finances).filter_by(month_year=date(d.year, 5, 1)).first()
-    # print(byMonthYear)
-
+    # sort by number of classes attended
     users = db.session.query(User).all()
+    usersAsList = []
+    usersSorted = []
+    maxClassesAttended = 0
     for user in users:
-        print(user.name)
-        print(user.weekly_status, type(user.weekly_status))
-    return render_template('test.html', users=users)
+        usersAsList.append([user.name, user.username, user.phone_number, user.address, len(user.weekly_status)])
+        maxClassesAttended = max(len(user.weekly_status), maxClassesAttended)
+    
+    # add based on classes attended
+    for i in range(maxClassesAttended + 1):
+        for user in usersAsList:
+            if (user[-1] == i):
+                usersSorted.append(user)
+    usersSorted.reverse()
+    return render_template('test.html', users=usersSorted, sortCriteria="Number of Classes Attended")
 
 @app.route('/test2')
 def test2():
+    # sort by classes paid for
     users = db.session.query(User).all()
+    usersAsList = []
+    usersSorted = []
+    maxTotalPayments = 0
     for user in users:
-        print(user.name)
-        print(user.weekly_status, type(user.weekly_status))
-    return render_template('test.html', users=users)
+        usersAsList.append([user.name, user.username, user.phone_number, user.address, user.total_payments])
+        maxTotalPayments = max(user.total_payments, maxTotalPayments)
+    
+    # add based on classes attended
+    for i in range(maxTotalPayments + 1):
+        for user in usersAsList:
+            if (user[-1] == i):
+                usersSorted.append(user)
+    usersSorted.reverse()
+    return render_template('test.html', users=usersSorted, sortCriteria="Total Payments")
 
 @app.route('/test3')
 def test3():
