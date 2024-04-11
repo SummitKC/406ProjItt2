@@ -33,8 +33,40 @@
                 {% for month in finance_info %}
                 <tr>
                     <td>{{ month.month_year }}</td>
-                    <td>{{ month.income_users }}</td> <!-- change to month.income when db is changed-->
-                    <td>{{ month.expenses_hall }}</td>
+                    <td>{{ month.calculate_total_income() }}
+                      <table class="table">
+                        <thead>
+                          <tr>
+                              <th scope="col">Member Income</th>
+                              <th scope="col">Other Income</th>
+                          </tr>
+                      </thead>
+                        <tbody>
+                          <tr>  
+                            <td>{{ month.income_users }}</td>
+                            <td>{{ month.income_other }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td> <!-- change to month.income when db is changed-->
+                    <td>{{ month.calculate_total_expenses() }}
+                      <table class="table">
+                        <thead>
+                          <tr>
+                              <th scope="col">Coach Expenses</th>
+                              <th scope="col">Hall Expenses</th>
+                              <th scope="col">Other Expenses</th>
+                          </tr>
+                      </thead>
+                        <tbody>
+                          <tr>  
+                            <td>{{ month.expenses_coach }}</td>
+                            <td>{{ month.expenses_hall }}</td>
+                            <td>{{ month.expenses_other }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
                     <td>{{ month.calculate_profit() }} </td>
                     
                 </tr>
