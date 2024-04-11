@@ -144,7 +144,8 @@ def payment():
             return redirect('/account')
         else: 
             flash("Declined")
-            return redirect('/payment')
+            week = request.form['week']
+            return redirect(f'/payment?week={week}')
     
     week = request.args.get('week')
     return render_template('payment.html', week=week)
@@ -243,6 +244,7 @@ def dashboard():
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
+    #weeks = range(10)
     if request.method == 'POST':
         # payments; week_to_pay = week number, not the amount paid
         week_to_pay = list(request.form.keys())[0]
