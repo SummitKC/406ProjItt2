@@ -117,6 +117,7 @@ def contact():
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
+
     if request.method == 'POST':
         cardNumber = request.form['card_number']
         cardNumber = cardNumber.replace('\t', '')[::-1]
@@ -138,16 +139,16 @@ def payment():
         total = sumEvenDigit + sumOddDigit 
 
         if total % 10 == 0: 
-            week = request.form['week']
+            week = request.args.get('week')
             currUserPay = db.session.query(User).filter_by(username=session['username']).first()
-            currUserPay.update_weekly_status(week, "attended")
-            return redirect('/account')
+            currUserPay.update_weekly_status(week, True)
+            return redirect(url_for('/account', paid = True))
+
         else: 
             flash("Declined")
             return redirect('/payment')
-    
-    week = request.args.get('week')
-    return render_template('payment.html', week=week)
+  
+    return render_template('payment.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -243,6 +244,7 @@ def dashboard():
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
+
     if request.method == 'POST':
         # payments; week_to_pay = week number, not the amount paid
         week_to_pay = list(request.form.keys())[0]
@@ -255,12 +257,19 @@ def account():
         # user side
         user.total_payments += user.current_payment
         user.update_weekly_status(week_to_pay, 'attended')
-
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        paymentStatus = request.args.get('paid')
+        try: 
+            return render_template('account.html', weeks=[1,2,3,4], payment=user.current_payment, paid = paymentStatus)
+        
+        except: 
+            return render_template('account.html', weeks=[1,2,3,4], payment=user.current_payment)
     else:
         # TODO: update to use render_template(account.html) when ready
-        user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        try: 
+            return render_template('account.html', weeks=[1,2,3,4], payment=session['payment'], paid = paymentStatus)
+        
+        except: 
+            return render_template('account.html', weeks=[1,2,3,4], payment=session['payment'])
 
 @app.route('/finance')
 def finance():
@@ -297,18 +306,18 @@ def test():
         print(user.weekly_status, type(user.weekly_status))
     return render_template('test.html', users=users)
 
-@app.route('/test2')
-def test2():
-    users = db.session.query(User).all()
-    for user in users:
-        print(user.name)
-        print(user.weekly_status, type(user.weekly_status))
-    return render_template('test.html', users=users)
+# @app.route('/test2')
+# def test2():
+#     users = db.session.query(User).all()
+#     for user in users:
+#         print(user.name)
+#         print(user.weekly_status, type(user.weekly_status))
+#     return render_template('test.html', users=users)
 
-@app.route('/test3')
-def test3():
-    users = db.session.query(User).all()
-    for user in users:
-        print(user.name)
-        print(user.weekly_status, type(user.weekly_status))
-    return render_template('test.html', users=users)
+# @app.route('/test3')
+# def test2():
+#     users = db.session.query(User).all()
+#     for user in users:
+#         print(user.name)
+#         print(user.weekly_status, type(user.weekly_status))
+#     return render_template('test.html', users=users)
