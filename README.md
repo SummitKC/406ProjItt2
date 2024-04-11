@@ -9,6 +9,9 @@ The app's primary functions include tracking member attendance, recording paymen
 
 ##### Main Features:
 **Member Management:** Keep track of club members, their contact information, and attendance history.
+
 **Financial Tracking:** Record income and expenses each month.
+
 **Reminders:** Send practice reminders to members. Additionally, issue payment reminders to members with outstanding balances.
+
 **Class Sign Up:** Members sign up for classes with the option to pay up front or pay later.
