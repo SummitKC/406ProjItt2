@@ -117,7 +117,6 @@ def contact():
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
-
     if request.method == 'POST':
         cardNumber = request.form['card_number']
         cardNumber = cardNumber.replace('\t', '')[::-1]
@@ -139,15 +138,16 @@ def payment():
         total = sumEvenDigit + sumOddDigit 
 
         if total % 10 == 0: 
-            week = request.args.get('week')
+            week = request.form['week']
             currUserPay = db.session.query(User).filter_by(username=session['username']).first()
-            currUserPay.update_weekly_status(week, True)
+            currUserPay.update_weekly_status(week, "attended")
             return redirect('/account')
         else: 
             flash("Declined")
             return redirect('/payment')
-  
-    return render_template('payment.html')
+    
+    week = request.args.get('week')
+    return render_template('payment.html', week=week)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -256,10 +256,11 @@ def account():
         user.total_payments += user.current_payment
         user.update_weekly_status(week_to_pay, 'attended')
 
-        return render_template('account.html', weeks=[1,2,3,4], payment=user.current_payment)
+        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
     else:
         # TODO: update to use render_template(account.html) when ready
-        return render_template('account.html', weeks=[1,2,3,4], payment=session['payment'])
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance')
 def finance():
@@ -305,7 +306,7 @@ def test2():
     return render_template('test.html', users=users)
 
 @app.route('/test3')
-def test2():
+def test3():
     users = db.session.query(User).all()
     for user in users:
         print(user.name)

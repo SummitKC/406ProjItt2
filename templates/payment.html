@@ -6,6 +6,7 @@
     <div class="center">
         <h1>Secure Payment</h1>
         <form method="POST" action="/payment">
+            <input type="hidden" name="week" value="{{ week }}">
             <div class="form-group">
                 <label for="card_name">Cardholder Name</label>
                 <input type="text" class="form-control" id="card_name" name="card_name" placeholder="Cardholder Name" required>
