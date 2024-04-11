@@ -1,5 +1,6 @@
 # CPS 406 Recreational Club Membership Project
 By: Adeshvir Dhillon, Bowie Chau, Isabel Kim, Summit K C, Thomas Imada
+
 ---
 ## The Improv Spot Website
 ### Description:
