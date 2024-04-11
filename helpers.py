@@ -34,3 +34,23 @@ def login_required(f):
 def get_key():
     load_dotenv(PATH)
     return os.getenv('SECRET_KEY')
+
+
+def calculate_total_income(finance_info):
+    total_income = 0
+    for month in finance_info:
+        total_income += month.income_users + month.income_other
+    return total_income
+
+def calculate_total_expenses(finance_info):
+    total_expenses = 0
+    for month in finance_info:
+        total_expenses += month.expenses_coach + month.expenses_other + month.expenses_hall
+    return total_expenses
+
+def calculate_total_profit(finance_info):
+    # return finance_inst.calculate_total_income() - finance_inst.calculate_total_expenses() --> later
+    total_profit =  calculate_total_income(finance_info) - calculate_total_expenses(finance_info)
+    if total_profit < 0:
+        return f"({-1 * total_profit})"
+    return total_profit

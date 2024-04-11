@@ -1,5 +1,6 @@
+from random import randint
 import time
-from helpers import login_required, get_key, send_mail
+from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, get_key, send_mail
 from datetime import datetime, date
 from functools import wraps
 from flask import Flask, flash, render_template, request, redirect, session, url_for
@@ -27,6 +28,17 @@ class User(db.Model):
     total_payments = db.Column(db.Integer)
     current_payment = db.Column(db.Integer) # how much the user currently pays for a class
     weekly_status = db.Column(db.JSON)  # Storing a dictionary as JSON
+
+    def userDiscount(self):
+        weekDict = self.weekly_status
+        revWeekDict = list(weekDict.keys())
+        if len(revWeekDict) > 11:
+            for i in range(12):
+                if revWeekDict[-i] == False: 
+                    self.current_payment = 10 
+            self.current_payment = self.current_payment * .9
+
+            db.session.commit()
 
     def add_total_payments(self):
         self.total_payments += self.current_payment
@@ -59,6 +71,7 @@ class Finances(db.Model):
     expenses_hall  = db.Column(db.Integer, default=0)
     expenses_other = db.Column(db.Integer, default=0)
 
+    
     def addUserIncome(self, amount: int, type: str):
         if type == 'u':
             self.income_users += amount
@@ -79,16 +92,15 @@ class Finances(db.Model):
     
     def calculate_total_expenses(self): 
         return self.expenses_coach + self.expenses_hall + self.expenses_other 
-    
-    def calculate_profit(self):
-        return self.calculate_total_income()  - self.calculate_total_expenses()
-
-    def monthInformation(self): 
-        return
 
     def __repr__(self) -> str:
         return f'| YYYY/MM/DD: {self.month_year} | Income: {self.calculate_total_income()} | Expenses: {self.calculate_total_expenses()} | Profit: {self.calculate_profit()}'
 
+    def calculate_profit(self):
+        month_profit = self.calculate_total_income()  - self.calculate_total_expenses()
+        if month_profit < 0:
+            return f"({-1 * month_profit})"
+        return month_profit
 
 @app.route('/')
 # @login_required <-- TODO uncomment this when everything is done
@@ -103,9 +115,9 @@ def about():
 def contact():
     return render_template('contact.html')
 
-
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
+
     if request.method == 'POST':
         cardNumber = request.form['card_number']
         cardNumber = cardNumber.replace('\t', '')[::-1]
@@ -127,10 +139,12 @@ def payment():
         total = sumEvenDigit + sumOddDigit 
 
         if total % 10 == 0: 
-            flash ('wasd')
-            return redirect('/')
+            week = request.args.get('week')
+            currUserPay = db.session.query(User).filter_by(username=session['username']).first()
+            currUserPay.update_weekly_status(week, True)
+            return redirect('/account')
         else: 
-            flash("Please wait")
+            flash("Declined")
             return redirect('/payment')
   
     return render_template('payment.html')
@@ -163,8 +177,28 @@ def register():
             print("password wrong")
             flash("Passwords do not match")
             return redirect('/register')
-        return redirect('/') 
+        return redirect('/login') 
     return render_template('register.html')
+
+
+@app.route('/adminlogin',methods=['GET', 'POST'])
+def adminlogin(): 
+    session.clear()
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        admin = db.session.query(Admins).filter_by(username=username).first()
+        if admin and check_password_hash(admin.hash, password):
+            session['user_id'] = admin.id
+            session['username'] = admin.username
+            return redirect('/') 
+        else:
+            #TODO: change this to give a popup notifying the user instead of redirecting them
+            return render_template('error.html', err_msg="Incorrect Username or Password")
+    else:
+        return render_template('adminlogin.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -177,6 +211,8 @@ def login():
         if user and check_password_hash(user.hash, password):
             session['user_id'] = user.id
             session['username'] = user.username
+            session['payment'] = user.current_payment
+            user.userDiscount()
             return redirect('/') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
@@ -227,8 +263,16 @@ def account():
 
 @app.route('/finance')
 def finance():
+    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000))),db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+    db.session.commit()
+
+
     finance_info = db.session.query(Finances).all()
-    return render_template('finance.html', lt_profit=100, lt_income=200, lt_expenses=100, finance_info=finance_info)
+    return render_template('finance.html', lt_profit=calculate_total_profit(finance_info), lt_income=calculate_total_income(finance_info),
+                            lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
 @app.route('/test')
 def test():
@@ -252,4 +296,18 @@ def test():
         print(user.weekly_status, type(user.weekly_status))
     return render_template('test.html', users=users)
 
+@app.route('/test2')
+def test2():
+    users = db.session.query(User).all()
+    for user in users:
+        print(user.name)
+        print(user.weekly_status, type(user.weekly_status))
+    return render_template('test.html', users=users)
 
+@app.route('/test3')
+def test2():
+    users = db.session.query(User).all()
+    for user in users:
+        print(user.name)
+        print(user.weekly_status, type(user.weekly_status))
+    return render_template('test.html', users=users)
