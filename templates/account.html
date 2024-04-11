@@ -8,6 +8,7 @@
             <tr>
                 <th>Class</th>
                 <th>Registration</th>
+                <th>Registration status</th>
             </tr>
         </thead>
         
@@ -17,7 +18,12 @@
                 <td>
                     <!-- paid -->
                     {% if (week in status) and (status[week][1] != 0) %}
-                    <p> You Have Already Paid</p>
+                        <form>
+                            <button type="submit" class="btn btn-secondary" disabled>Register and Pay</button>
+                        </form>
+                        <form>
+                            <button type="submit" name="{{ week }}" class="btn btn-secondary" disabled>Register Now</button>
+                        </form>
                     {% else %}
                         <form method="GET" action="/payment">
                             <input type="hidden" name="week" value="{{ week }}">
@@ -26,6 +32,13 @@
                         <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
                             <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
                         </form>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if (week in status) and (status[week][1] != 0) %}
+                        <p>✅ Registered</p>
+                    {% else %}
+                        <p>❌ Not Registered</p>
                     {% endif %}
                 </td>
             </tr>
