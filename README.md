@@ -8,10 +8,7 @@ This web application designed to manage the finances of a local improv club in T
 The app's primary functions include tracking member attendance, recording payments, tracking member payments, and handling coach payments. Additionally, it provides features for sending practice reminders to members and issuing payment reminders to those who are overdue.
 
 ### Main Features:
-**Member Management:** Keep track of club members, their contact information, and attendance history.
-
-**Financial Tracking:** Record income and expenses each month.
-
-**Reminders:** Send practice reminders to members. Additionally, issue payment reminders to members with outstanding balances.
-
-**Class Sign Up:** Members sign up for classes with the option to pay up front or pay later.
+- **Member Management:** Keep track of club members, their contact information, and attendance history.
+- **Financial Tracking:** Record income and expenses each month.
+- **Reminders:** Send practice reminders to members. Additionally, issue payment reminders to members with outstanding balances.
+- **Class Sign Up:** Members sign up for classes with the option to pay up front or pay later.
