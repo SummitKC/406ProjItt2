@@ -181,6 +181,28 @@ def register():
     return render_template('register.html')
 
 
+@app.route('/reqadmin', methods=['GET', 'POST'])
+def request_admin():
+    if request.method == 'POST':
+        email = request.form['email']
+        usernames = sorted(db.session.query(Admins), key=lambda x: x.username)
+        if usernames:
+            admin_num = str(int(usernames[-1].username[-1]) + 1)
+            new_admin_name = f'admin{admin_num}'
+        else:
+            new_admin_name = 'admin1'
+        password = ""
+        for _ in range(10):
+            password += str(randint(0,9))
+        new_admin = Admins(username=new_admin_name, hash=generate_password_hash(password))
+        db.session.add(new_admin)
+        db.session.commit()
+        send_mail(email, (new_admin_name, password))
+        return 'Request Sent'
+    else:
+        return render_template('reqadmin.html')
+
+
 @app.route('/adminlogin',methods=['GET', 'POST'])
 def adminlogin(): 
     session.clear()
@@ -192,7 +214,7 @@ def adminlogin():
         if admin and check_password_hash(admin.hash, password):
             session['user_id'] = admin.id
             session['username'] = admin.username
-            return redirect('/adminside.html') 
+            return redirect('/') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
             return render_template('error.html', err_msg="Incorrect Username or Password")
@@ -215,8 +237,8 @@ def login():
             user.userDiscount()
             return redirect('/') 
         else:
-            flash ('Incorrect Username or Password')
-            return render_template('/login.html')
+            #TODO: change this to give a popup notifying the user instead of redirecting them
+            return render_template('error.html', err_msg="Incorrect Username or Password")
     else:
         return render_template('login.html')
 
@@ -225,10 +247,6 @@ def logout():
     session.clear()
     return redirect('/')
     
-@app.route('/adminregister')
-def adminregister():
-    pass
-
 @app.route('/admin') # TODO add admin login later  
 def yearToDate():
     ytd = db.session.query(Finances).all()
@@ -279,59 +297,40 @@ def finance():
     return render_template('finance.html', lt_profit=calculate_total_profit(finance_info), lt_income=calculate_total_income(finance_info),
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
-@app.route('/test', methods=['GET', 'POST'])
-def pickSortFunction():
+@app.route('/test')
+def test():
 
-    if request.method == 'POST':
-        
-        if request.form['sort'] == "completedPayment":
-            return test2()
-        elif request.form['sort'] == "classAttendence":
-            return test()
-        else: 
-            return test3()
-    
-    return test3()
+    # d = datetime.today()
+    # new_finance = Finances(month_year=date(d.year, d.month, 1), 
+    #                        income_users=1000, expenses_hall=500)
+    # db.session.add(new_finance)
+    # db.session.commit()
 
+    # ytd = db.session.query(Finances).first()
+    # print(ytd.month_year.year == mmyy.year and ytd.month_year.month == mmyy.month)
+    # print(ytd.month_year, type(ytd.month_year))
+    # print(ytd.month_year, date(d.year, d.month, 1), ytd.month_year == date(d.year, d.month, 1))
+    # byMonthYear = db.session.query(Finances).filter_by(month_year=date(d.year, 5, 1)).first()
+    # print(byMonthYear)
+
+    users = db.session.query(User).all()
+    for user in users:
+        print(user.name)
+        print(user.weekly_status, type(user.weekly_status))
+    return render_template('test.html', users=users)
+
+@app.route('/test2')
+def test2():
+    users = db.session.query(User).all()
+    for user in users:
+        print(user.name)
+        print(user.weekly_status, type(user.weekly_status))
+    return render_template('test.html', users=users)
+
+@app.route('/test3')
 def test3():
     users = db.session.query(User).all()
-    usersAsList = []
     for user in users:
-        usersAsList.append([user.name, user.username, user.phone_number, user.address])
-    return render_template('test.html', users=usersAsList, sortCriteria="")
-
-def test():
-    # sort by number of classes attended
-    users = db.session.query(User).all()
-    usersAsList = []
-    usersSorted = []
-    maxClassesAttended = 0
-    for user in users:
-        usersAsList.append([user.name, user.username, user.phone_number, user.address, len(user.weekly_status)])
-        maxClassesAttended = max(len(user.weekly_status), maxClassesAttended)
-    
-    # add based on classes attended
-    for i in range(maxClassesAttended + 1):
-        for user in usersAsList:
-            if (user[-1] == i):
-                usersSorted.append(user)
-    usersSorted.reverse()
-    return render_template('test.html', users=usersSorted, sortCriteria="Number of Classes Attended")
-
-def test2():
-    # sort by classes paid for
-    users = db.session.query(User).all()
-    usersAsList = []
-    usersSorted = []
-    maxTotalPayments = 0
-    for user in users:
-        usersAsList.append([user.name, user.username, user.phone_number, user.address, user.total_payments])
-        maxTotalPayments = max(user.total_payments, maxTotalPayments)
-    
-    # add based on classes attended
-    for i in range(maxTotalPayments + 1):
-        for user in usersAsList:
-            if (user[-1] == i):
-                usersSorted.append(user)
-    usersSorted.reverse()
-    return render_template('test.html', users=usersSorted, sortCriteria="Total Payments")
+        print(user.name)
+        print(user.weekly_status, type(user.weekly_status))
+    return render_template('test.html', users=users)
