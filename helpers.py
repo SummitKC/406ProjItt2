@@ -23,11 +23,35 @@ def send_mail(email: str, credentials: Tuple[str, str]):
         smtp_server.login(sender, os.getenv('PASSWORD'))
         smtp_server.sendmail(sender, recipients, msg.as_string())
 
+def send_mail_self(email: str, name: str, message: str):
+    load_dotenv(PATH)
+    sender = "theimprovspot@gmail.com"
+
+    msg = MIMEText(f'From: {name}\n Email: {email}\n Messege: {message}')
+    msg['Subject'] = "Messege from"
+    msg['From'] = sender
+    msg['To'] = sender
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+        smtp_server.login(sender, os.getenv('PASSWORD'))
+        smtp_server.sendmail(sender, sender, msg.as_string())
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get('user_id') is None:
+        if session.get('admin_id'):
+            return redirect('/admin')
+        elif session.get('user_id') is None:
             return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('admin_id') is None:
+            return redirect('/adminlogin')
         return f(*args, **kwargs)
     return decorated_function
 
