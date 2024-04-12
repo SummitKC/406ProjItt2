@@ -15,18 +15,18 @@
             <tr>
                 <td>Week {{ week }}</td>
                 <td>
-                    <form method="GET" action="/payment">
-                        <input type="hidden" name="week" value="{{ week }}">
-                        {% if paid %}
-                        <p> You have alread paid <p>
-                        {% else %}
-                        <button type="submit" class="btn btn-primary">Register and Pay</button>
-
-                    </form>
-                    <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
-                        <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
-                        {% endif %}
-                    </form>
+                    <!-- paid -->
+                    {% if (week in status) and (status[week][1] != 0) %}
+                    <p> You Have Already Paid</p>
+                    {% else %}
+                        <form method="GET" action="/payment">
+                            <input type="hidden" name="week" value="{{ week }}">
+                            <button type="submit" class="btn btn-primary">Register and Pay</button>
+                        </form>
+                        <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
+                            <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

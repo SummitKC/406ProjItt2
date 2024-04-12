@@ -1,31 +1,45 @@
-{% extends "layout.html" %}
+{% extends "adminside.html" %}
 
 {% block title %} Tester {% endblock %}
 
 {% block main %}
     <h1>Member Information</h1>
-    <ul>
-        <table class="table">
+
+    <!-- Dropdown for sorting -->
+    <form method="POST">
+        <label for="sort">Sort by:</label>
+        <select id="sort" name="sort">
+            <option value="ALL"> </option>
+            <option value="ALL">ALL</option>
+            <option value="classAttendence">Class Attendence</option>
+            <option value="completedPayment">Completed Payment</option>
+        </select>
+        <button type="submit">Sort</button>
+    </form>
+
+    <!-- Table to display user information -->
+    <table class="table">
+        <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Address</th>
+            <th>Phone Number</th>
+            <th>{{ sortCriteria }}</tr>
+        </tr>
+    {% for user in users %}
+
+
             <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Address</th>
-                <th>Phone Number</th>
+                <td>{{ user[0] }}</td>
+                <td>{{ user[1] }}</td>
+                <td>{{ user[2] }}</td>
+                <td>{{ user[3] }}</td>
+                <td>{{ user[4] }}</td>
+
             </tr>
-        {% for user in users %}
 
 
-                <tr>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.phone_number }}</td>
-                    <td>{{ user.address }}</td>
+    {% endfor %}
+</table>
 
-
-                </tr>
-
-
-        {% endfor %}
-    </table>
-    </ul>
 {% endblock %}
