@@ -15,20 +15,16 @@
             <ul class="nav justify-content-left">
                 <li class="nav-item">
                 <a class="nav-link active" href="/admin"><i class="fas fa-home"></i></a>
-                </li>
-                {% if session['username'] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/account">Account</a>
-                </li>
                 <li class="nav-item">
                 <a class="nav-link active" href="/test" tabindex="-1" aria-disabled="true">View Members</a>
                 </li>
-                {% if session['user_id'] %}
+                </li>
+                <li class="nav-item">
+                <a class="nav-link active" href="/finance" tabindex="-1" aria-disabled="true">Club Finances</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>
                 </li>
-                {% endif %}
-                {% endif %}
             </ul>
         </header>
         <main class="container-fluid">{% block main %}{% endblock %}</main>
