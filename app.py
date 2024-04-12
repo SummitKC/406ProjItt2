@@ -111,8 +111,10 @@ def home():
 def about():
     return render_template('about.html')
 
-@app.route('/contact')
+@app.route('/contact', methods=['GET', 'POST'])
 def contact():
+    if request.method == 'POST':
+        request.form()
     return render_template('contact.html')
 
 @app.route('/payment', methods=['GET', 'POST'])
@@ -263,16 +265,51 @@ def account():
         user = db.session.query(User).filter_by(username=session['username']).first()
         return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
 
-@app.route('/finance')
+@app.route('/finance', methods=['GET', 'POST'])
 def finance():
-    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000))),db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
-    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
-    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
-    db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
-    db.session.commit()
-
-
     finance_info = db.session.query(Finances).all()
+    if request.method == 'POST':
+        today = datetime.today()
+        year_month_only = date(today.year, today.month, 1)
+        expenseType = request.form['expenseType']
+        expenseAmount = int(request.form['expenseAmount'])
+        entered = False
+        for month in finance_info:
+            print(type(month.month_year), type(year_month_only))
+            if month.month_year == year_month_only:
+                if (expenseType == "coach"):
+                    month.expenses_coach += expenseAmount
+                    db.session.commit()
+                    entered = True
+                elif (expenseType == "hall"):
+                    month.expenses_hall += expenseAmount
+                    db.session.commit()
+                    entered = True
+                elif (expenseType == "other"):
+                    month.expenses_other += expenseAmount
+                    db.session.commit()
+                    entered = True
+
+        if (not entered):
+            if (expenseType == "coach"):
+                db.session.add(Finances(month_year = year_month_only, income_users = 0, income_other = 0, expenses_coach=expenseAmount, expenses_hall=0, expenses_other=0))
+                db.session.commit()
+                print("coach add")
+                entered = True
+            elif (expenseType == "hall"):
+                db.session.add(Finances(month_year = year_month_only, income_users = 0, income_other = 0, expenses_coach=0, expenses_hall=expenseAmount, expenses_other=0))
+                month.expenses_hall += expenseAmount
+                db.session.commit()
+                print("hall add")
+                entered = True
+            elif (expenseType == "other"):
+                db.session.add(Finances(month_year = year_month_only, income_users = 0, income_other = 0, expenses_coach=0, expenses_hall=0, expenses_other=expenseAmount))
+                db.session.commit()
+                print("other add")
+                entered = True
+    #db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+    #db.session.add(Finances(month_year = datetime(randint(1900, 2024), randint(1, 12), randint(1, 28)),income_users = randint(1000, 10000), income_other = randint(1000, 10000), expenses_coach=randint(1000, 2000), expenses_hall=randint(1000, 2000), expenses_other=randint(1000, 2000)))
+
     return render_template('finance.html', lt_profit=calculate_total_profit(finance_info), lt_income=calculate_total_income(finance_info),
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
@@ -317,7 +354,7 @@ def test2():
 @app.route('/test3')
 def test3():
     users = db.session.query(User).all()
+    usersAsList = []
     for user in users:
-        print(user.name)
-        print(user.weekly_status, type(user.weekly_status))
-    return render_template('test.html', users=users)
+        usersAsList.append([user.name, user.username, user.phone_number, user.address])
+    return render_template('test.html', users=usersAsList, sortCriteria="")
