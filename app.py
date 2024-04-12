@@ -108,6 +108,10 @@ class Finances(db.Model):
         month_profit = self.calculate_total_income()  - self.calculate_total_expenses()
         return month_profit
 
+class Classes(db.Model):
+    week = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date, nullable=False)
+
 @app.route('/')
 @login_required #<-- TODO uncomment this when everything is done
 def home():
@@ -123,7 +127,6 @@ def contact():
         request.form()
     return render_template('contact.html')
 
-@app.route('/payment', methods=['GET', 'POST'])
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
