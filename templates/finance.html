@@ -6,20 +6,42 @@
   <br>
     <div class="center">
         <h1>Financial Information</h1>
-        <table class="table">
-          <tr>
-            <td>Lifetime Profit</td>
-            <td>{{ lt_profit }}</td>
-          </tr>
-          <tr>
-            <td>Lifetime Income</td>
-            <td>{{ lt_income }}</td>
-          </tr>
-          <tr>
-            <td>Lifetime Expenses</td>
-            <td>{{ lt_expenses }}</td>
-          </tr>
-        </table>
+        <div class="container">
+          <h3>Input Expense for This Month</h3>
+          <form method="POST" action="/finance">
+              <div class="col-md-6">
+                <br>
+                <select class="form-control" id="expenseType" name="expenseType" required>
+                    <option value="" disabled selected>Select Expense Type</option>
+                    <option value="coach">Coach Expense</option>
+                    <option value="hall">Hall Expense</option>
+                    <option value="other">Other Expense</option>
+                </select>
+              </div>
+            <br>
+            <div class="input-group mb-3">
+              <span class="input-group-text">$</span>
+              <input type="text" pattern="[0-9]*" class="form-control" name="expenseAmount" placeholder="Enter Amount">
+            </div>
+            <button type="submit" class="btn btn-primary">Enter Expense</button>
+          </form>
+          <hr style="height:3px"> 
+          <br>
+          <table class="table">
+            <tr>
+              <td>Lifetime Profit</td>
+              <td>${{ lt_profit }}</td>
+            </tr>
+            <tr>
+              <td>Lifetime Income</td>
+              <td>${{ lt_income }}</td>
+            </tr>
+            <tr>
+              <td>Lifetime Expenses</td>
+              <td>${{ lt_expenses }}</td>
+            </tr>
+          </table>
+        </div>
         <table class="table">
             <thead>
                 <tr>
@@ -33,7 +55,7 @@
                 {% for month in finance_info %}
                 <tr>
                     <td>{{ month.month_year }}</td>
-                    <td>{{ month.calculate_total_income() }}
+                    <td>${{ month.calculate_total_income() }}
                       <table class="table">
                         <thead>
                           <tr>
@@ -43,13 +65,13 @@
                       </thead>
                         <tbody>
                           <tr>  
-                            <td>{{ month.income_users }}</td>
-                            <td>{{ month.income_other }}</td>
+                            <td>${{ month.income_users }}</td>
+                            <td>${{ month.income_other }}</td>
                           </tr>
                         </tbody>
                       </table>
                     </td> <!-- change to month.income when db is changed-->
-                    <td>{{ month.calculate_total_expenses() }}
+                    <td>${{ month.calculate_total_expenses() }}
                       <table class="table">
                         <thead>
                           <tr>
@@ -60,14 +82,14 @@
                       </thead>
                         <tbody>
                           <tr>  
-                            <td>{{ month.expenses_coach }}</td>
-                            <td>{{ month.expenses_hall }}</td>
-                            <td>{{ month.expenses_other }}</td>
+                            <td>${{ month.expenses_coach }}</td>
+                            <td>${{ month.expenses_hall }}</td>
+                            <td>${{ month.expenses_other }}</td>
                           </tr>
                         </tbody>
                       </table>
                     </td>
-                    <td>{{ month.calculate_profit() }} </td>
+                    <td>${{ month.calculate_profit() }} </td>
                     
                 </tr>
                 {% endfor %}
