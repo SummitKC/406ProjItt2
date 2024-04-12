@@ -1,0 +1,18 @@
+Note: Can use any exp date and name etc... 
+
+Accepted:
+
+Card Number                     CVV
+4030000010001234                123
+5100000010001004	            123
+2223000048400011	            123
+371100001000131	                1234
+6011500080009080	            123
+
+Not Accepted: (Note any sequence of numbers can be inputted)
+
+4030000010001231                123
+5100000010001001	            123
+2223000048400012	            123
+371100001000131                1234
+6011500080009081	            123

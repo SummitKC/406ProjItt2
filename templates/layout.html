@@ -1,51 +1,34 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>{% block title %}{% endblock %}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-        <script src="https://kit.fontawesome.com/05fe32cb57.js" crossorigin="anonymous"></script>
-        <link href="/static/styles.css" rel="stylesheet">
-    </head>
-    <body>
-        {% if get_flashed_messages() %}
-            <header>
-                <div class="alert alert-primary mb-0 text-center" role="alert">
-                    {{ get_flashed_messages() | join(" ") }}
-                </div>
-            </header>
-        {% endif %}
-        <header>
-            <h1 class="display-3">The Improv Spot</h1>
-            <h2 class="h5"> IMPROVing your life one class at a time!</h2>
-            <ul class="nav justify-content-left">
-                <li class="nav-item">
-                <a class="nav-link active" href="/"><i class="fas fa-home"></i></a>
-                </li>
-                {% if session['username'] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/account">Account</a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">Login/Register</a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                <a class="nav-link" href="/about">About</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link active" href="/contact" tabindex="-1" aria-disabled="true">Contact</a>
-                </li>
-                {% if session['user_id'] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
-                {% endif %}
-            </ul>
-        </header>
-        <main class="container-fluid">{% block main %}{% endblock %}</main>
-    </body>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/05fe32cb57.js" crossorigin="anonymous"></script>
+    <link href="/static/styles.css" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-brand">The Improv Spot</div>
+        <div class="navbar-subtext">IMPROVing your life one class at a time!</div>
+        <ul class="nav-links">
+            <li><a href="/" class="active">Home</a></li>
+            {% if session['username'] %}
+                <li><a href="/account">Account</a></li>
+            {% else %}
+                <li><a href="/login">Login/Register</a></li>
+            {% endif %}
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if session['user_id'] %}
+                <li><a href="/logout">Logout</a></li>
+            {% endif %}
+        </ul>
+    </header>
+    <main class="container-fluid">
+        {% block main %}{% endblock %}
+    </main>
+</body>
 </html>
