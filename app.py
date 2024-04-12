@@ -39,7 +39,7 @@ class User(db.Model):
             db.session.commit()
 
     def add_total_payments(self):
-        self.total_payments += self.current_payment
+        self.total_payments += 1
         db.session.commit()
 
     def update_weekly_status(self, week_number, attendance):
