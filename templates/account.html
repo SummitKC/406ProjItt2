@@ -27,8 +27,7 @@
                             <input type="hidden" name="week" value="{{ week }}">
                             <button type="submit" class="btn btn-primary">Register and Pay</button>
                         </form>
-                        <form method="POST" action="/account">
-                            <input type="hidden" name="paid" value = 'False' >
+                        <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
                             <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
                         </form>
                     {% endif %}
@@ -40,7 +39,7 @@
     <script>
         function confirmUpdate(week, price) {
             // Display a confirmation dialog
-            var msg = "Are you sure you want to register for week " + week + " for $" + price + "?";
+            var msg = "Are you sure you want to register for week " + week + "?";
             var confirmed = confirm(msg);
             return confirmed;
         }
