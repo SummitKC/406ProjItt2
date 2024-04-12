@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "adminside.html" %}
 
 {% block title %} Finances {% endblock %}
 
@@ -70,7 +70,7 @@
                           </tr>
                         </tbody>
                       </table>
-                    </td> <!-- change to month.income when db is changed-->
+                    </td> 
                     <td>${{ month.calculate_total_expenses() }}
                       <table class="table">
                         <thead>

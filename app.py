@@ -193,7 +193,7 @@ def adminlogin():
         if admin and check_password_hash(admin.hash, password):
             session['user_id'] = admin.id
             session['username'] = admin.username
-            return redirect('/') 
+            return redirect('/admin') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
             return render_template('error.html', err_msg="Incorrect Username or Password")
@@ -225,7 +225,28 @@ def login():
 def logout():
     session.clear()
     return redirect('/')
-    
+
+@app.route('/reqadmin', methods=['GET', 'POST'])
+def request_admin():
+    if request.method == 'POST':
+        email = request.form['email']
+        usernames = sorted(db.session.query(Admins), key=lambda x: x.username)
+        if usernames:
+            admin_num = str(int(usernames[-1].username[-1]) + 1)
+            new_admin_name = f'admin{admin_num}'
+        else:
+            new_admin_name = 'admin1'
+        password = ""
+        for _ in range(10):
+            password += str(randint(0,9))
+        new_admin = Admins(username=new_admin_name, hash=generate_password_hash(password))
+        db.session.add(new_admin)
+        db.session.commit()
+        send_mail(email, (new_admin_name, password))
+        return 'Request Sent'
+    else:
+        return render_template('reqadmin.html')
+
 @app.route('/admin') # TODO add admin login later  
 def yearToDate():
     ytd = db.session.query(Finances).all()
@@ -241,7 +262,7 @@ def dashboard():
     username = session['username']
     return f"Welcome, {username}! This is your dashboard."
 
-@app.route('/account', methods=['GET', 'POST'])
+@app.route('/account', methods=['GET', 'POST', 'PUT'])
 @login_required
 def account():
     if request.method == 'POST':
@@ -257,7 +278,14 @@ def account():
         user.total_payments += user.current_payment
         user.update_weekly_status(week_to_pay, 'attended')
 
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4"], paid = True, payment=user.current_payment, status=user.weekly_status)
+    elif request.method == 'PUT': 
+        print("abc")
+        week_to_pay = list(request.form.keys())[0]
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        user.update_weekly_status(week_to_pay, 'attended')
+        return render_template('account.html', weeks=["1","2","3","4"], paid = False, status=user.weekly_status)
+
     else:
         # TODO: update to use render_template(account.html) when ready
         user = db.session.query(User).filter_by(username=session['username']).first()
