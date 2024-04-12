@@ -27,11 +27,6 @@ class User(db.Model):
     current_payment = db.Column(db.Integer) # how much the user currently pays for a class
     weekly_status = db.Column(db.JSON)  # Storing a dictionary as JSON
 
-    def __init__(self, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
-        if self.weekly_status is None:
-            self.weekly_status = {}
-
     def userDiscount(self):
         weekDict = self.weekly_status
         revWeekDict = list(weekDict.keys())
@@ -166,7 +161,6 @@ def payment():
 
             currUserPay = db.session.query(User).filter_by(username=session['username']).first()
             print(currUserPay)
-            input(">>")
             currUserPay.update_weekly_status(week, "attended", True)
             finance.addUserIncome(currUserPay.current_payment, 'u')
             return redirect('/account')
@@ -292,11 +286,11 @@ def account():
         week_number = list(request.form.keys())[0]
         user = db.session.query(User).filter_by(username=session['username']).first()
         user.update_weekly_status(week_number, 'attended', False)
+        print(week_number)
         return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
     else:
-        # TODO: update to use render_template(account.html) when ready
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"],paid = True, payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required
