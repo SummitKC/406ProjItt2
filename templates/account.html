@@ -17,25 +17,21 @@
                 <td>
                     {% if (week in status) and (status[week][1] != 0) %}
                     <p> You Have Already Paid</p>
-                    {% else %}
-
-                        {% if paid == false %}
-                            <form method="GET" action="/payment">
-                                <input type="hidden" name="week" value="{{ week }}">
-                                <button type="submit" class="btn btn-primary">Register and Pay</button>
-                            </form>
-                        {% else %}
-
-                            <form method="GET" action="/payment">
-                                <input type="hidden" name="week" value="{{ week }}">
-                                <button type="submit" class="btn btn-primary">Register and Pay</button>
-                            </form>
-                            <form method="PUT" action="/account">
-                                <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
-                            </form>
-                        {% endif %}
+                    {% if not paid and status[week][1] == 0 %}
+                    <form method="GET" action="/payment">
+                        <input type="hidden" name="week" value="{{ week }}">
+                        <button type="submit" class="btn btn-primary">Pay</button>
                     {% endif %}
-
+                    {% else %}
+                        <form method="GET" action="/payment">
+                            <input type="hidden" name="week" value="{{ week }}">
+                            <button type="submit" class="btn btn-primary">Register and Pay</button>
+                        </form>
+                        <form method="POST" action="/account">
+                            <input type="hidden" name="paid" value = 'False' >
+                            <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

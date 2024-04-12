@@ -262,34 +262,32 @@ def dashboard():
     username = session['username']
     return f"Welcome, {username}! This is your dashboard."
 
-@app.route('/account', methods=['GET', 'POST', 'PUT'])
+@app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     if request.method == 'POST':
-        # payments; week_to_pay = week number, not the amount paid
-        week_to_pay = list(request.form.keys())[0]
-        d = datetime.today()
-        # query both finance and user side
-        finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
-        user = db.session.query(User).filter_by(username=session['username']).first()
-        # finance side
-        finance.addUserIncome(user.current_payment, 'u')
-        # user side
-        user.total_payments += user.current_payment
-        user.update_weekly_status(week_to_pay, 'attended')
+        if request.form.get('paid') == 'False':
+            user = db.session.query(User).filter_by(username=session['username']).first()
+            return render_template('account.html', weeks=["1","2","3","4"], paid = False, payment=user.current_payment, status=user.weekly_status)
+        else:
+            # payments; week_to_pay = week number, not the amount paid
+            week_to_pay = list(request.form.keys())[0]
+            d = datetime.today()
+            # query both finance and user side
+            finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
+            user = db.session.query(User).filter_by(username=session['username']).first()
+            # finance side
+            finance.addUserIncome(user.current_payment, 'u')
+            # user side
+            user.total_payments += user.current_payment
+            user.update_weekly_status(week_to_pay, 'attended')
 
-        return render_template('account.html', weeks=["1","2","3","4"], paid = True, payment=user.current_payment, status=user.weekly_status)
-    elif request.method == 'PUT': 
-        print("abc")
-        week_to_pay = list(request.form.keys())[0]
-        user = db.session.query(User).filter_by(username=session['username']).first()
-        user.update_weekly_status(week_to_pay, 'attended')
-        return render_template('account.html', weeks=["1","2","3","4"], paid = False, status=user.weekly_status)
+            return render_template('account.html', weeks=["1","2","3","4"],paid = True,  payment=user.current_payment, status=user.weekly_status)
 
     else:
         # TODO: update to use render_template(account.html) when ready
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4"],paid = True, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 def finance():
