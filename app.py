@@ -1,8 +1,6 @@
 from random import randint
-import time
-from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, get_key, send_mail
+from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail
 from datetime import datetime, date
-from functools import wraps
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
@@ -41,15 +39,25 @@ class User(db.Model):
             db.session.commit()
 
     def add_total_payments(self):
-        self.total_payments += self.current_payment
+        self.total_payments += 1
         db.session.commit()
 
-    def update_weekly_status(self, week_number, attendance):
+    def update_weekly_status(self, week_number, attendance, paid):
         if not self.weekly_status:
             self.weekly_status = {}
-        self.weekly_status[week_number] = (attendance, self.current_payment)
+        # user has not paid but has registered for a class
+        if paid == False:
+            self.weekly_status[week_number] = [attendance, 0]
+        # user has both registered and paid for a class
+        else:
+            # idk why i have to return in this else but it wont work otherwise
+            self.weekly_status[week_number] = [attendance, self.current_payment]
+            flag_modified(self, "weekly_status")
+            self.add_total_payments()
+            db.session.commit()
+            return 
+        
         flag_modified(self, "weekly_status")
-        db.session.add(self)
         db.session.commit()
 
     # TODO remove the hash 
@@ -101,7 +109,7 @@ class Finances(db.Model):
         return month_profit
 
 @app.route('/')
-# @login_required <-- TODO uncomment this when everything is done
+@login_required #<-- TODO uncomment this when everything is done
 def home():
     return render_template('home.html')
 
@@ -140,8 +148,21 @@ def payment():
 
         if total % 10 == 0: 
             week = request.form['week']
+
+            # query finance to get correct month/year to update
+            d = datetime.today()
+            finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
+            # if mm/yy not in db (could be because new month) create the row and add it to db
+            if not finance:
+                finance = Finances(month_year=date(d.year, d.month, 1), income_users=0, income_other=0,
+                                expenses_coach=0, expenses_hall=0, expenses_other=0)
+                db.session.add(finance)
+                db.session.commit()
+
             currUserPay = db.session.query(User).filter_by(username=session['username']).first()
-            currUserPay.update_weekly_status(week, "attended")
+            print(currUserPay)
+            currUserPay.update_weekly_status(week, "attended", True)
+            finance.addUserIncome(currUserPay.current_payment, 'u')
             return redirect('/account')
         else: 
             flash("Declined")
@@ -191,8 +212,7 @@ def adminlogin():
         
         admin = db.session.query(Admins).filter_by(username=username).first()
         if admin and check_password_hash(admin.hash, password):
-            session['user_id'] = admin.id
-            session['username'] = admin.username
+            session['admin_id'] = admin.id
             return redirect('/admin') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
@@ -247,14 +267,10 @@ def request_admin():
     else:
         return render_template('reqadmin.html')
 
-@app.route('/admin') # TODO add admin login later  
-def yearToDate():
-    ytd = db.session.query(Finances).all()
-    ytdTotal = 0
-    for yt in ytd:
-        ytdTotal += yt.calculate_profit()
-
-    return render_template('adminside.html', ytdTotal = ytdTotal)
+@app.route('/admin') # TODO add admin login later 
+@admin_required 
+def admin():
+    return render_template('adminside.html')
 
 @app.route('/dashboard')
 @login_required
@@ -266,30 +282,18 @@ def dashboard():
 @login_required
 def account():
     if request.method == 'POST':
-        if request.form.get('paid') == 'False':
-            user = db.session.query(User).filter_by(username=session['username']).first()
-            return render_template('account.html', weeks=["1","2","3","4"], paid = False, payment=user.current_payment, status=user.weekly_status)
-        else:
-            # payments; week_to_pay = week number, not the amount paid
-            week_to_pay = list(request.form.keys())[0]
-            d = datetime.today()
-            # query both finance and user side
-            finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
-            user = db.session.query(User).filter_by(username=session['username']).first()
-            # finance side
-            finance.addUserIncome(user.current_payment, 'u')
-            # user side
-            user.total_payments += user.current_payment
-            user.update_weekly_status(week_to_pay, 'attended')
-
-            return render_template('account.html', weeks=["1","2","3","4"],paid = True,  payment=user.current_payment, status=user.weekly_status)
-
-    else:
-        # TODO: update to use render_template(account.html) when ready
+        # a post request on this function means the user registered, but did not paid for a class
+        week_number = list(request.form.keys())[0]
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"],paid = True, payment=user.current_payment, status=user.weekly_status)
+        user.update_weekly_status(week_number, 'attended', False)
+        print(week_number)
+        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+    else:
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
+@admin_required
 def finance():
     finance_info = db.session.query(Finances).all()
     if request.method == 'POST':
@@ -338,6 +342,7 @@ def finance():
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
 @app.route('/test', methods=['GET', 'POST'])
+@admin_required
 def pickSortFunction():
 
     if request.method == 'POST':
