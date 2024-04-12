@@ -1,8 +1,6 @@
 from random import randint
-import time
-from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, get_key, send_mail
+from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail
 from datetime import datetime, date
-from functools import wraps
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
@@ -101,7 +99,7 @@ class Finances(db.Model):
         return month_profit
 
 @app.route('/')
-# @login_required <-- TODO uncomment this when everything is done
+@login_required #<-- TODO uncomment this when everything is done
 def home():
     return render_template('home.html')
 
@@ -115,7 +113,6 @@ def contact():
         request.form()
     return render_template('contact.html')
 
-@app.route('/payment', methods=['GET', 'POST'])
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
@@ -191,8 +188,7 @@ def adminlogin():
         
         admin = db.session.query(Admins).filter_by(username=username).first()
         if admin and check_password_hash(admin.hash, password):
-            session['user_id'] = admin.id
-            session['username'] = admin.username
+            session['admin_id'] = admin.id
             return redirect('/admin') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
@@ -247,14 +243,10 @@ def request_admin():
     else:
         return render_template('reqadmin.html')
 
-@app.route('/admin') # TODO add admin login later  
-def yearToDate():
-    ytd = db.session.query(Finances).all()
-    ytdTotal = 0
-    for yt in ytd:
-        ytdTotal += yt.calculate_profit()
-
-    return render_template('adminside.html', ytdTotal = ytdTotal)
+@app.route('/admin') # TODO add admin login later 
+@admin_required 
+def admin():
+    return render_template('adminside.html')
 
 @app.route('/dashboard')
 @login_required
@@ -285,6 +277,7 @@ def account():
         return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
+@admin_required
 def finance():
     finance_info = db.session.query(Finances).all()
     if request.method == 'POST':
@@ -333,6 +326,7 @@ def finance():
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
 @app.route('/test', methods=['GET', 'POST'])
+@admin_required
 def pickSortFunction():
 
     if request.method == 'POST':
