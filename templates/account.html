@@ -18,6 +18,11 @@
                     <!-- paid -->
                     {% if (week in status) and (status[week][1] != 0) %}
                     <p> You Have Already Paid</p>
+                    {% elif (week in status) and (status[week][1] == 0) %}
+                    <form method="GET" action="/payment">
+                        <input type="hidden" name="week" value="{{ week }}">
+                        <button type="submit" class="btn btn-primary">Pay</button>
+                    </form>
                     {% else %}
                         <form method="GET" action="/payment">
                             <input type="hidden" name="week" value="{{ week }}">

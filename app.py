@@ -27,6 +27,11 @@ class User(db.Model):
     current_payment = db.Column(db.Integer) # how much the user currently pays for a class
     weekly_status = db.Column(db.JSON)  # Storing a dictionary as JSON
 
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
+        if self.weekly_status is None:
+            self.weekly_status = {}
+
     def userDiscount(self):
         weekDict = self.weekly_status
         revWeekDict = list(weekDict.keys())
@@ -42,12 +47,22 @@ class User(db.Model):
         self.total_payments += 1
         db.session.commit()
 
-    def update_weekly_status(self, week_number, attendance):
+    def update_weekly_status(self, week_number, attendance, paid):
         if not self.weekly_status:
             self.weekly_status = {}
-        self.weekly_status[week_number] = (attendance, self.current_payment)
+        # user has not paid but has registered for a class
+        if paid == False:
+            self.weekly_status[week_number] = [attendance, 0]
+        # user has both registered and paid for a class
+        else:
+            # idk why i have to return in this else but it wont work otherwise
+            self.weekly_status[week_number] = [attendance, self.current_payment]
+            flag_modified(self, "weekly_status")
+            self.add_total_payments()
+            db.session.commit()
+            return 
+        
         flag_modified(self, "weekly_status")
-        db.session.add(self)
         db.session.commit()
 
     # TODO remove the hash 
@@ -137,8 +152,22 @@ def payment():
 
         if total % 10 == 0: 
             week = request.form['week']
+
+            # query finance to get correct month/year to update
+            d = datetime.today()
+            finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
+            # if mm/yy not in db (could be because new month) create the row and add it to db
+            if not finance:
+                finance = Finances(month_year=date(d.year, d.month, 1), income_users=0, income_other=0,
+                                expenses_coach=0, expenses_hall=0, expenses_other=0)
+                db.session.add(finance)
+                db.session.commit()
+
             currUserPay = db.session.query(User).filter_by(username=session['username']).first()
-            currUserPay.update_weekly_status(week, "attended")
+            print(currUserPay)
+            input(">>")
+            currUserPay.update_weekly_status(week, "attended", True)
+            finance.addUserIncome(currUserPay.current_payment, 'u')
             return redirect('/account')
         else: 
             flash("Declined")
@@ -258,18 +287,10 @@ def dashboard():
 @login_required
 def account():
     if request.method == 'POST':
-        # payments; week_to_pay = week number, not the amount paid
-        week_to_pay = list(request.form.keys())[0]
-        d = datetime.today()
-        # query both finance and user side
-        finance = db.session.query(Finances).filter_by(month_year=date(d.year, d.month, 1)).first()
+        # a post request on this function means the user registered, but did not paid for a class
+        week_number = list(request.form.keys())[0]
         user = db.session.query(User).filter_by(username=session['username']).first()
-        # finance side
-        finance.addUserIncome(user.current_payment, 'u')
-        # user side
-        user.total_payments += user.current_payment
-        user.update_weekly_status(week_to_pay, 'attended')
-
+        user.update_weekly_status(week_number, 'attended', False)
         return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
     else:
         # TODO: update to use render_template(account.html) when ready
