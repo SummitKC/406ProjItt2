@@ -2,7 +2,19 @@
 {% block title %} The Improv Spot {% endblock %}
 
 {% block main %}
-  {% if session['username'] %}
-    <p>Welcome, {{ session['username'] }} </p>
+<div class="container">
+
+{% if session['username'] %}
+    <br>
+    <h1>Welcome, {{ session['username'] }} </h1>
+    <p>We hope you're enjoying the club and are taking full advatnage of you're membership!</p>
+  {% else %}
+    <h1>About Us</h1>
+    <br>
+    <h4><a href="/login">Sign up or login</a> to register for classes<h4>
+    <h5>Welcome to our website!</h5>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
   {% endif %}
 {% endblock %}
+
+</div>

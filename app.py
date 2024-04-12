@@ -129,6 +129,7 @@ def contact():
     return render_template('contact.html')
 
 @app.route('/payment', methods=['GET', 'POST'])
+@app.route('/payment', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
         cardNumber = request.form['card_number']
@@ -295,7 +296,7 @@ def account():
     else:
         # TODO: update to use render_template(account.html) when ready
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4"],paid = True, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required

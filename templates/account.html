@@ -15,7 +15,6 @@
             <tr>
                 <td>Week {{ week }}</td>
                 <td>
-                    <!-- paid -->
                     {% if (week in status) and (status[week][1] != 0) %}
                     <p> You Have Already Paid</p>
                     {% elif (week in status) and (status[week][1] == 0) %}
@@ -28,7 +27,8 @@
                             <input type="hidden" name="week" value="{{ week }}">
                             <button type="submit" class="btn btn-primary">Register and Pay</button>
                         </form>
-                        <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
+                        <form method="POST" action="/account">
+                            <input type="hidden" name="paid" value = 'False' >
                             <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
                         </form>
                     {% endif %}
