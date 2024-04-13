@@ -1,5 +1,5 @@
 from random import randint
-from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail, send_mail_self
+from helpers import *
 from datetime import datetime, date
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
@@ -113,8 +113,6 @@ class Classes(db.Model):
     week = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.Date, nullable=False)
 
-
-
 @app.route('/')
 @login_required #<-- TODO uncomment this when everything is done
 def home():
@@ -227,6 +225,7 @@ def adminlogin():
             return redirect('/admin') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
+
             return render_template('error.html', err_msg="Incorrect Username or Password")
     else:
         return render_template('adminlogin.html')
@@ -274,25 +273,27 @@ def request_admin():
         db.session.add(new_admin)
         db.session.commit()
         send_mail(email, (new_admin_name, password))
-        return 'Request Sent'
+        return render_template('reqadmin.html', req_sent=True)
     else:
-        return render_template('reqadmin.html')
+        return render_template('reqadmin.html', req_sent=False)
 
 @app.route('/admin') # TODO add admin login later 
 @admin_required 
 def admin():
-    return render_template('adminside.html')
+    return render_template('adminhome.html')
 
 @app.route('/adminhome', methods=['GET', 'POST'])
 @admin_required
 def adminhome():
     
-    if request.method == 'POST':
-        newClass = Classes(date = datetime.date.today)
-
-    
-    else:
-        return render_template('adminhome.html')
+    if request.method == 'GET':
+        date = datetime.today()
+        year = str(date.year)
+        month = zero_padding(str(date.month))
+        day = zero_padding(str(date.day))
+        return render_template('delMe.html', year=year, month=month, day=day)
+    elif request.method == 'POST':
+        pass
 
 
 @app.route('/dashboard')
@@ -308,12 +309,13 @@ def account():
         # a post request on this function means the user registered, but did not paid for a class
         week_number = list(request.form.keys())[0]
         user = db.session.query(User).filter_by(username=session['username']).first()
+        session['payment'] = user.current_payment
         user.update_weekly_status(week_number, 'attended', False)
         print(week_number)
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4","5","6","7","8","9","10","11","12","13","14", "15"], payment=user.current_payment, status=user.weekly_status)
     else:
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks=["1","2","3","4","5","6","7","8","9","10","11","12","13","14", "15"], payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required

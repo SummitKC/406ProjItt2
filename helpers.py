@@ -78,3 +78,14 @@ def calculate_total_profit(finance_info):
     if total_profit < 0:
         return f"({-1 * total_profit})"
     return total_profit
+
+def zero_padding(day: str):
+    if len(day) == 1:
+        return "0" + day
+    else:
+        return day
+    
+def is_same_week(date1, date2):
+    # Get the ISO week numbers for the dates
+    # Check if the ISO week numbers are the same
+    return date1.isocalendar()[1] == date2.isocalendar()[1]
