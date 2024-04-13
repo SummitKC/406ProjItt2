@@ -286,15 +286,22 @@ def admin():
 @admin_required
 def adminhome():
     
-    if request.method == 'GET':
-        date = datetime.today()
-        year = str(date.year)
-        month = zero_padding(str(date.month))
-        day = zero_padding(str(date.day))
-        return render_template('delMe.html', year=year, month=month, day=day)
-    elif request.method == 'POST':
-        pass
+    if request.method == 'POST':
+        class_date = request.form['class']
+        # string index is safe as date format is always yyyy-mm-dd
+        new_class = Classes(date=datetime(int(class_date[0:4]), int(class_date[5:7]), int(class_date[8:])))
+        db.session.add(new_class)
+        db.session.commit()
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date))for week in newClasses]
+        weeksDate = [str(week.date) for week in newClasses]
+        return render_template('adminhome.html', weeks = weeks)
 
+    date = datetime.today()
+    year = str(date.year)
+    month = zero_padding(str(date.month))
+    day = zero_padding(str(date.day))
+    return render_template('adminhome.html', year=year, month=month, day=day)
 
 @app.route('/dashboard')
 @login_required
@@ -312,10 +319,14 @@ def account():
         session['payment'] = user.current_payment
         user.update_weekly_status(week_number, 'attended', False)
         print(week_number)
-        return render_template('account.html', weeks=["1","2","3","4","5","6","7","8","9","10","11","12","13","14", "15"], payment=user.current_payment, status=user.weekly_status)
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
     else:
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4","5","6","7","8","9","10","11","12","13","14", "15"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required

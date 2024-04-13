@@ -1,0 +1,32 @@
+{% extends "adminside.html" %}
+
+{% block title %} Admin Login {% endblock %}
+
+{% block main %}
+
+<form method="POST" action="/adminhome">
+    <label for="class">Class date:</label>
+    <input type="date" id="class" name="class" min="{{ year }}-{{ month }}-{{ day }}" max="2025-12-31" required/>
+    <button type="submit" name="date" class="btn btn-primary">Submit</button>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Class</th>
+            <th></th>
+        </tr>
+    </thead>
+    
+    {% for week in weeks %}
+        <tr>
+            <td>Week {{week[0]}}    -    {{week[1]}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+
+
+
+{% endblock %}

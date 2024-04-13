@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %} Account {% endblock %}
+{% block title %} Classes {% endblock %}
 
 {% block main %}
     
@@ -13,22 +13,22 @@
         
         {% for week in weeks %}
             <tr>
-                <td>Week {{ week }}</td>
+                <td>Week {{week[0]}}    -    {{week[1]}}</td>
                 <td>
-                    {% if (week in status) and (status[week][1] != 0) %}
+                    {% if (week[0] in status) and (status[week[0]][1] != 0) %}
                     <p> You Have Already Paid</p>
-                    {% elif (week in status) and (status[week][1] == 0) %}
+                    {% elif (week[0] in status) and (status[week[0]][1] == 0) %}
                     <form method="GET" action="/payment">
-                        <input type="hidden" name="week" value="{{ week }}">
+                        <input type="hidden" name="week" value="{{ week[0] }}">
                         <button type="submit" class="btn btn-primary">Pay</button>
                     </form>
                     {% else %}
                         <form method="GET" action="/payment">
-                            <input type="hidden" name="week" value="{{ week }}">
+                            <input type="hidden" name="week" value="{{ week[0] }}">
                             <button type="submit" class="btn btn-primary">Register and Pay</button>
                         </form>
-                        <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week }}', '{{ payment }}')">
-                            <button type="submit" name="{{ week }}" class="btn btn-primary">Register Now</button>
+                        <form method="POST" action="/account" onsubmit="return confirmUpdate('{{ week[0] }}', '{{ payment }}')">
+                            <button type="submit" name="{{ week[0] }}" class="btn btn-primary">Register Now</button>
                         </form>
                     {% endif %}
                 </td>
