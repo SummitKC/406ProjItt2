@@ -39,7 +39,7 @@ def send_mail_self(email: str, name: str, message: str):
 def send_warning_mail(email, name, weeks):
     load_dotenv(PATH)
     week_nums = ', '.join(c.rstrip(',') for c in weeks)
-    msg = MIMEText(f'Hello {name}, You have outstanding balances for weeks {week_nums}. \nPlease pay your fees as soon as possible.')
+    msg = MIMEText(f'Hello {name}, You have outstanding balances for weeks {week_nums}. \nPlease pay your fees as soon as possible or else you may be subject to late penalties.')
     msg['Subject'] = "Fee Reminders"
     msg['From'] = "theimprovspot@gmail.com"
     msg['To'] = email
