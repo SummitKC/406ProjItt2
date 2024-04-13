@@ -36,6 +36,13 @@ def send_mail_self(email: str, name: str, message: str):
         smtp_server.login(sender, os.getenv('PASSWORD'))
         smtp_server.sendmail(sender, sender, msg.as_string())
 
+def send_warning_mail(email, name, weeks):
+    load_dotenv(PATH)
+    week_nums = ', '.join(c.rstrip(',') for c in weeks)
+    msg = MIMEText(f'Hello {name}, You have outstanding balances for weeks {week_nums}. \nPlease pay your fees as soon as possible.')
+    msg['Subject'] = "Fee Reminders"
+    msg['From'] = "theimprovspot@gmail.com"
+    msg['To'] = email
 
 def login_required(f):
     @wraps(f)

@@ -21,6 +21,7 @@ class User(db.Model):
     username = db.Column(db.String(30), unique=True, nullable=False)
     hash = db.Column(db.String, nullable=False)
     name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(50), nullable=False)
     phone_number = db.Column(db.String)
     address = db.Column(db.String)
     total_payments = db.Column(db.Integer)
@@ -59,6 +60,16 @@ class User(db.Model):
         
         flag_modified(self, "weekly_status")
         db.session.commit()
+
+    def unpaid_classes(self):
+        classes = db.session.query(User).filter_by(username=self.username).first().weekly_status
+        weeks_unpaid = []
+        # get a list of weeks unpaid. Elements of list will be the week number
+        for week in classes:
+            if classes[week][0] == "attended" and classes[week][1] == 0:
+                weeks_unpaid.append(week)
+        if len(weeks_unpaid) != 0:
+            send_warning_mail(self.email, self.name, weeks_unpaid)
 
     # TODO remove the hash 
     def __repr__(self) -> str:
@@ -177,6 +188,7 @@ def register():
         password = request.form['password']
         confirm_password = request.form['confirm-password']
         name = request.form['name']
+        email = request.form['email']
         address = request.form['address']
         phone_number = request.form['phone-number']
 
@@ -184,7 +196,7 @@ def register():
 
         if confirm_password == password:
             new_user = User(username=username, hash=generate_password_hash(password), 
-                            name = name, phone_number = phone_number, address = address,
+                            name = name, email=email, phone_number = phone_number, address = address,
                             total_payments=0, current_payment=10, weekly_status={}
                             )
 
@@ -214,6 +226,7 @@ def login():
             session['username'] = user.username
             session['payment'] = user.current_payment
             user.userDiscount()
+            user.unpaid_classes()
             return redirect('/') 
         else:
             flash ('Incorrect Username or Password')
