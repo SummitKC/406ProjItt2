@@ -179,8 +179,6 @@ def adminlogin():
             session['admin_id'] = admin.id
             return redirect('/admin') 
         else:
-            #TODO: change this to give a popup notifying the user instead of redirecting them
-
             return render_template('error.html', err_msg="Incorrect Username or Password")
     else:
         return render_template('adminlogin.html')
@@ -399,22 +397,22 @@ def pickSortFunction():
     if request.method == 'POST':
         
         if request.form['sort'] == "completedPayment":
-            return test2()
+            return classes_paid()
         elif request.form['sort'] == "classAttendence":
-            return test()
+            return classes_attended()
         else: 
-            return test3()
+            return show_all()
     
-    return test3()
+    return show_all()
 
-def test3():
+def show_all():
     users = db.session.query(User).all()
     usersAsList = []
     for user in users:
         usersAsList.append([user.name, user.username, user.phone_number, user.address])
     return render_template('test.html', users=usersAsList, sortCriteria="")
 
-def test():
+def classes_attended():
     # sort by number of classes attended
     users = db.session.query(User).all()
     usersAsList = []
@@ -432,7 +430,7 @@ def test():
     usersSorted.reverse()
     return render_template('test.html', users=usersSorted, sortCriteria="Number of Classes Attended")
 
-def test2():
+def classes_paid():
     # sort by classes paid for
     users = db.session.query(User).all()
     usersAsList = []
