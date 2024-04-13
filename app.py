@@ -65,12 +65,10 @@ class User(db.Model):
         return f'UID: {self.id}, User {self.username}, Hash: {self.hash}| Name: {self.name} | Phone Number: {self.phone_number} | Address: {self.address} | Status: {self.weekly_status}'
 
 class Admins(db.Model):
-
     # if u want admin login, register thing -> 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(30), unique=True, nullable=False)
     hash = db.Column(db.String, nullable=False)
-    
 
 class Finances(db.Model):
     month_year = db.Column(db.Date, primary_key=True)
@@ -114,7 +112,7 @@ class Classes(db.Model):
     date = db.Column(db.Date, nullable=False)
 
 @app.route('/')
-@login_required #<-- TODO uncomment this when everything is done
+@login_required 
 def home():
     return render_template('home.html')
 
@@ -132,6 +130,145 @@ def contact():
         flash('Email Sent')
         return render_template('contact.html')
     return render_template('contact.html')
+
+@app.route('/reqadmin', methods=['GET', 'POST'])
+def request_admin():
+    if request.method == 'POST':
+        email = request.form['email']
+        usernames = sorted(db.session.query(Admins), key=lambda x: x.username)
+        if usernames:
+            admin_num = str(int(usernames[-1].username[-1]) + 1)
+            new_admin_name = f'admin{admin_num}'
+        else:
+            new_admin_name = 'admin1'
+        password = ""
+        for _ in range(10):
+            password += str(randint(0,9))
+        new_admin = Admins(username=new_admin_name, hash=generate_password_hash(password))
+        db.session.add(new_admin)
+        db.session.commit()
+        send_mail(email, (new_admin_name, password))
+        return render_template('reqadmin.html', req_sent=True)
+    else:
+        return render_template('reqadmin.html', req_sent=False)
+    
+@app.route('/adminlogin',methods=['GET', 'POST'])
+def adminlogin(): 
+    session.clear()
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        admin = db.session.query(Admins).filter_by(username=username).first()
+        if admin and check_password_hash(admin.hash, password):
+            session['admin_id'] = admin.id
+            return redirect('/admin') 
+        else:
+            #TODO: change this to give a popup notifying the user instead of redirecting them
+
+            return render_template('error.html', err_msg="Incorrect Username or Password")
+    else:
+        return render_template('adminlogin.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm-password']
+        name = request.form['name']
+        address = request.form['address']
+        phone_number = request.form['phone-number']
+
+        print(password, confirm_password, name, address, phone_number)
+
+        if confirm_password == password:
+            new_user = User(username=username, hash=generate_password_hash(password), 
+                            name = name, phone_number = phone_number, address = address,
+                            total_payments=0, current_payment=10, weekly_status={}
+                            )
+
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                print("made it", new_user)
+            except:
+                return render_template('error.html', err_msg="There was an unexpected error registering the account") 
+        elif confirm_password != password:
+            print("password wrong")
+            flash("Passwords do not match")
+            return redirect('/register')
+        return redirect('/login') 
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    session.clear()
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = db.session.query(User).filter_by(username=username).first()
+        if user and check_password_hash(user.hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['payment'] = user.current_payment
+            user.userDiscount()
+            return redirect('/') 
+        else:
+            flash ('Incorrect Username or Password')
+            return render_template('/login.html')
+    else:
+        return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
+@app.route('/admin') # TODO add admin login later 
+@admin_required 
+def admin():
+    return render_template('adminhome.html')
+
+@app.route('/adminhome', methods=['GET', 'POST'])
+@admin_required
+def adminhome():
+    if request.method == 'POST':
+        class_date = request.form['class']
+        # string index is safe as date format is always yyyy-mm-dd
+        new_class = Classes(date=datetime(int(class_date[0:4]), int(class_date[5:7]), int(class_date[8:])))
+        db.session.add(new_class)
+        db.session.commit()
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date))for week in newClasses]
+        weeksDate = [str(week.date) for week in newClasses]
+        return render_template('adminhome.html', weeks = weeks)
+
+    date = datetime.today()
+    year = str(date.year)
+    month = zero_padding(str(date.month))
+    day = zero_padding(str(date.day))
+    return render_template('adminhome.html', year=year, month=month, day=day)
+
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    if request.method == 'POST':
+        # a post request on this function means the user registered, but did not paid for a class
+        week_number = list(request.form.keys())[0]
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        session['payment'] = user.current_payment
+        user.update_weekly_status(week_number, 'attended', False)
+        print(week_number)
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
+    else:
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
+        user = db.session.query(User).filter_by(username=session['username']).first()
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
@@ -179,154 +316,6 @@ def payment():
     
     week = request.args.get('week')
     return render_template('payment.html', week=week)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm-password']
-        name = request.form['name']
-        address = request.form['address']
-        phone_number = request.form['phone-number']
-
-        print(password, confirm_password, name, address, phone_number)
-
-        if confirm_password == password:
-            new_user = User(username=username, hash=generate_password_hash(password), 
-                            name = name, phone_number = phone_number, address = address,
-                            total_payments=0, current_payment=10, weekly_status={}
-                            )
-
-            try:
-                db.session.add(new_user)
-                db.session.commit()
-                print("made it", new_user)
-            except:
-                return render_template('error.html', err_msg="There was an unexpected error registering the account") 
-        elif confirm_password != password:
-            print("password wrong")
-            flash("Passwords do not match")
-            return redirect('/register')
-        return redirect('/login') 
-    return render_template('register.html')
-
-
-@app.route('/adminlogin',methods=['GET', 'POST'])
-def adminlogin(): 
-    session.clear()
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        admin = db.session.query(Admins).filter_by(username=username).first()
-        if admin and check_password_hash(admin.hash, password):
-            session['admin_id'] = admin.id
-            return redirect('/admin') 
-        else:
-            #TODO: change this to give a popup notifying the user instead of redirecting them
-
-            return render_template('error.html', err_msg="Incorrect Username or Password")
-    else:
-        return render_template('adminlogin.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    session.clear()
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        user = db.session.query(User).filter_by(username=username).first()
-        if user and check_password_hash(user.hash, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session['payment'] = user.current_payment
-            user.userDiscount()
-            return redirect('/') 
-        else:
-            flash ('Incorrect Username or Password')
-            return render_template('/login.html')
-    else:
-        return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect('/')
-
-@app.route('/reqadmin', methods=['GET', 'POST'])
-def request_admin():
-    if request.method == 'POST':
-        email = request.form['email']
-        usernames = sorted(db.session.query(Admins), key=lambda x: x.username)
-        if usernames:
-            admin_num = str(int(usernames[-1].username[-1]) + 1)
-            new_admin_name = f'admin{admin_num}'
-        else:
-            new_admin_name = 'admin1'
-        password = ""
-        for _ in range(10):
-            password += str(randint(0,9))
-        new_admin = Admins(username=new_admin_name, hash=generate_password_hash(password))
-        db.session.add(new_admin)
-        db.session.commit()
-        send_mail(email, (new_admin_name, password))
-        return render_template('reqadmin.html', req_sent=True)
-    else:
-        return render_template('reqadmin.html', req_sent=False)
-
-@app.route('/admin') # TODO add admin login later 
-@admin_required 
-def admin():
-    return render_template('adminhome.html')
-
-@app.route('/adminhome', methods=['GET', 'POST'])
-@admin_required
-def adminhome():
-    
-    if request.method == 'POST':
-        class_date = request.form['class']
-        # string index is safe as date format is always yyyy-mm-dd
-        new_class = Classes(date=datetime(int(class_date[0:4]), int(class_date[5:7]), int(class_date[8:])))
-        db.session.add(new_class)
-        db.session.commit()
-        newClasses = db.session.query(Classes).all()
-        weeks = [(str(week.week), str(week.date))for week in newClasses]
-        weeksDate = [str(week.date) for week in newClasses]
-        return render_template('adminhome.html', weeks = weeks)
-
-    date = datetime.today()
-    year = str(date.year)
-    month = zero_padding(str(date.month))
-    day = zero_padding(str(date.day))
-    return render_template('adminhome.html', year=year, month=month, day=day)
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    username = session['username']
-    return f"Welcome, {username}! This is your dashboard."
-
-@app.route('/account', methods=['GET', 'POST'])
-@login_required
-def account():
-    if request.method == 'POST':
-        # a post request on this function means the user registered, but did not paid for a class
-        week_number = list(request.form.keys())[0]
-        user = db.session.query(User).filter_by(username=session['username']).first()
-        session['payment'] = user.current_payment
-        user.update_weekly_status(week_number, 'attended', False)
-        print(week_number)
-        newClasses = db.session.query(Classes).all()
-        weeks = [(str(week.week), str(week.date)) for week in newClasses]
-        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
-    else:
-        newClasses = db.session.query(Classes).all()
-        weeks = [(str(week.week), str(week.date)) for week in newClasses]
-        user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required
