@@ -13,3 +13,6 @@ The app's primary functions include tracking member attendance, recording paymen
 - **Financial Tracking:** Record income and expenses each month.
 - **Reminders:** Send practice reminders to members. Additionally, issue payment reminders to members with outstanding balances.
 - **Class Sign Up:** Members sign up for classes with the option to pay up front or pay later.
+
+##
+Note: Email functionality will be disabled with the conclusion of the project
