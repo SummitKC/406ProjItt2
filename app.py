@@ -377,29 +377,29 @@ def finance():
     return render_template('finance.html', lt_profit=calculate_total_profit(finance_info), lt_income=calculate_total_income(finance_info),
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
-@app.route('/test', methods=['GET', 'POST'])
+@app.route('/adminsort', methods=['GET', 'POST'])
 @admin_required
 def pickSortFunction():
 
     if request.method == 'POST':
         
         if request.form['sort'] == "completedPayment":
-            return test2()
+            return adminsort3()
         elif request.form['sort'] == "classAttendence":
-            return test()
+            return adminsort2()
         else: 
-            return test3()
+            return adminsort()
     
-    return test3()
+    return adminsort()
 
-def test3():
+def adminsort():
     users = db.session.query(User).all()
     usersAsList = []
     for user in users:
         usersAsList.append([user.name, user.username, user.phone_number, user.address])
     return render_template('test.html', users=usersAsList, sortCriteria="")
 
-def test():
+def adminsort2():
     # sort by number of classes attended
     users = db.session.query(User).all()
     usersAsList = []
@@ -417,7 +417,7 @@ def test():
     usersSorted.reverse()
     return render_template('test.html', users=usersSorted, sortCriteria="Number of Classes Attended")
 
-def test2():
+def adminsort3():
     # sort by classes paid for
     users = db.session.query(User).all()
     usersAsList = []
