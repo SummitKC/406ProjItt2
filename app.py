@@ -1,5 +1,5 @@
 from random import randint
-from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail
+from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail, send_mail_self
 from datetime import datetime, date
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
@@ -70,6 +70,7 @@ class Admins(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(30), unique=True, nullable=False)
     hash = db.Column(db.String, nullable=False)
+    
 
 class Finances(db.Model):
     month_year = db.Column(db.Date, primary_key=True)
@@ -107,7 +108,7 @@ class Finances(db.Model):
     def calculate_profit(self):
         month_profit = self.calculate_total_income()  - self.calculate_total_expenses()
         return month_profit
-
+    
 class Classes(db.Model):
     week = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.Date, nullable=False)
@@ -124,7 +125,12 @@ def about():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        request.form()
+        Email = request.form['email']
+        name = request.form['name']
+        message = request.form['message']
+        send_mail_self(Email, name, message )
+        flash('Email Sent')
+        return render_template('contact.html')
     return render_template('contact.html')
 
 @app.route('/payment', methods=['GET', 'POST'])
@@ -274,6 +280,18 @@ def request_admin():
 @admin_required 
 def admin():
     return render_template('adminside.html')
+
+@app.route('/adminhome', methods=['GET', 'POST'])
+@admin_required
+def adminhome():
+    
+    if request.method == 'POST':
+        newClass = Classes(date = datetime.date.today)
+
+    
+    else:
+        return render_template('adminhome.html')
+
 
 @app.route('/dashboard')
 @login_required
