@@ -71,7 +71,7 @@ class User(db.Model):
         if len(weeks_unpaid) != 0:
             send_warning_mail(self.email, self.name, weeks_unpaid)
             # if there are more than 3 unpaid classes, apply a penalty on account
-            if len(weeks_unpaid >= 3):
+            if len(weeks_unpaid) >= 3:
                 self.current_payment = 12
         
     
