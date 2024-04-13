@@ -23,6 +23,20 @@ def send_mail(email: str, credentials: Tuple[str, str]):
         smtp_server.login(sender, os.getenv('PASSWORD'))
         smtp_server.sendmail(sender, recipients, msg.as_string())
 
+def send_mail_self(email: str, name: str, message: str):
+    load_dotenv(PATH)
+    sender = "theimprovspot@gmail.com"
+
+    msg = MIMEText(f'From: {name}\n Email: {email}\n Messege: {message}')
+    msg['Subject'] = "Messege from"
+    msg['From'] = sender
+    msg['To'] = sender
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+        smtp_server.login(sender, os.getenv('PASSWORD'))
+        smtp_server.sendmail(sender, sender, msg.as_string())
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -64,3 +78,14 @@ def calculate_total_profit(finance_info):
     if total_profit < 0:
         return f"({-1 * total_profit})"
     return total_profit
+
+def zero_padding(day: str):
+    if len(day) == 1:
+        return "0" + day
+    else:
+        return day
+    
+def is_same_week(date1, date2):
+    # Get the ISO week numbers for the dates
+    # Check if the ISO week numbers are the same
+    return date1.isocalendar()[1] == date2.isocalendar()[1]

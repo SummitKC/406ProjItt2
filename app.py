@@ -1,5 +1,5 @@
 from random import randint
-from helpers import calculate_total_expenses, calculate_total_income, calculate_total_profit, login_required, admin_required, get_key, send_mail
+from helpers import *
 from datetime import datetime, date
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 from flask_session import Session
@@ -70,6 +70,7 @@ class Admins(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(30), unique=True, nullable=False)
     hash = db.Column(db.String, nullable=False)
+    
 
 class Finances(db.Model):
     month_year = db.Column(db.Date, primary_key=True)
@@ -107,6 +108,10 @@ class Finances(db.Model):
     def calculate_profit(self):
         month_profit = self.calculate_total_income()  - self.calculate_total_expenses()
         return month_profit
+    
+class Classes(db.Model):
+    week = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date, nullable=False)
 
 @app.route('/')
 @login_required #<-- TODO uncomment this when everything is done
@@ -120,10 +125,14 @@ def about():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        request.form()
+        Email = request.form['email']
+        name = request.form['name']
+        message = request.form['message']
+        send_mail_self(Email, name, message )
+        flash('Email Sent')
+        return render_template('contact.html')
     return render_template('contact.html')
 
-@app.route('/payment', methods=['GET', 'POST'])
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
@@ -216,6 +225,7 @@ def adminlogin():
             return redirect('/admin') 
         else:
             #TODO: change this to give a popup notifying the user instead of redirecting them
+
             return render_template('error.html', err_msg="Incorrect Username or Password")
     else:
         return render_template('adminlogin.html')
@@ -263,14 +273,35 @@ def request_admin():
         db.session.add(new_admin)
         db.session.commit()
         send_mail(email, (new_admin_name, password))
-        return 'Request Sent'
+        return render_template('reqadmin.html', req_sent=True)
     else:
-        return render_template('reqadmin.html')
+        return render_template('reqadmin.html', req_sent=False)
 
 @app.route('/admin') # TODO add admin login later 
 @admin_required 
 def admin():
-    return render_template('adminside.html')
+    return render_template('adminhome.html')
+
+@app.route('/adminhome', methods=['GET', 'POST'])
+@admin_required
+def adminhome():
+    
+    if request.method == 'POST':
+        class_date = request.form['class']
+        # string index is safe as date format is always yyyy-mm-dd
+        new_class = Classes(date=datetime(int(class_date[0:4]), int(class_date[5:7]), int(class_date[8:])))
+        db.session.add(new_class)
+        db.session.commit()
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date))for week in newClasses]
+        weeksDate = [str(week.date) for week in newClasses]
+        return render_template('adminhome.html', weeks = weeks)
+
+    date = datetime.today()
+    year = str(date.year)
+    month = zero_padding(str(date.month))
+    day = zero_padding(str(date.day))
+    return render_template('adminhome.html', year=year, month=month, day=day)
 
 @app.route('/dashboard')
 @login_required
@@ -285,12 +316,17 @@ def account():
         # a post request on this function means the user registered, but did not paid for a class
         week_number = list(request.form.keys())[0]
         user = db.session.query(User).filter_by(username=session['username']).first()
+        session['payment'] = user.current_payment
         user.update_weekly_status(week_number, 'attended', False)
         print(week_number)
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
     else:
+        newClasses = db.session.query(Classes).all()
+        weeks = [(str(week.week), str(week.date)) for week in newClasses]
         user = db.session.query(User).filter_by(username=session['username']).first()
-        return render_template('account.html', weeks=["1","2","3","4"], payment=user.current_payment, status=user.weekly_status)
+        return render_template('account.html', weeks = weeks, payment=user.current_payment, status=user.weekly_status)
 
 @app.route('/finance', methods=['GET', 'POST'])
 @admin_required
