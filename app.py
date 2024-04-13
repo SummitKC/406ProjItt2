@@ -247,7 +247,7 @@ def logout():
 @app.route('/admin') # TODO add admin login later 
 @admin_required 
 def admin():
-    return render_template('adminhome.html')
+    return adminhome()
 
 @app.route('/adminhome', methods=['GET', 'POST'])
 @admin_required
@@ -260,14 +260,10 @@ def adminhome():
         db.session.commit()
         newClasses = db.session.query(Classes).all()
         weeks = [(str(week.week), str(week.date))for week in newClasses]
-        weeksDate = [str(week.date) for week in newClasses]
         return render_template('adminhome.html', weeks = weeks)
-
-    date = datetime.today()
-    year = str(date.year)
-    month = zero_padding(str(date.month))
-    day = zero_padding(str(date.day))
-    return render_template('adminhome.html', year=year, month=month, day=day)
+    newClasses = db.session.query(Classes).all()
+    weeks = [(str(week.week), str(week.date))for week in newClasses]
+    return render_template('adminhome.html', weeks = weeks)
 
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
