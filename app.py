@@ -74,8 +74,7 @@ class User(db.Model):
             if len(weeks_unpaid >= 3):
                 self.current_payment = 12
         
-        
-
+    
     # TODO remove the hash 
     def __repr__(self) -> str:
         return f'UID: {self.id}, User {self.username}, Hash: {self.hash}| Name: {self.name} | Phone Number: {self.phone_number} | Address: {self.address} | Status: {self.weekly_status}'
@@ -265,6 +264,19 @@ def adminhome():
     weeks = [(str(week.week), str(week.date))for week in newClasses]
     return render_template('adminhome.html', weeks = weeks)
 
+
+@app.route('/admincontact', methods=['GET', 'POST'])
+@admin_required
+def adminContact():
+    if request.method == 'POST':
+        Email = request.form['email']
+        name = request.form['name']
+        message = request.form['message']
+        send_mail_user(Email, name, message )
+        flash('Email Sent')
+        return render_template('adminmsg.html')
+    return render_template('adminmsg.html')
+           
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
@@ -380,7 +392,7 @@ def finance():
     return render_template('finance.html', lt_profit=calculate_total_profit(finance_info), lt_income=calculate_total_income(finance_info),
                             lt_expenses=calculate_total_expenses(finance_info), finance_info=finance_info)
 
-@app.route('/test', methods=['GET', 'POST'])
+@app.route('/adminsort', methods=['GET', 'POST'])
 @admin_required
 def pickSortFunction():
 

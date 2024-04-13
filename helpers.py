@@ -23,6 +23,20 @@ def send_mail(email: str, credentials: Tuple[str, str]):
         smtp_server.login(sender, os.getenv('PASSWORD'))
         smtp_server.sendmail(sender, recipients, msg.as_string())
 
+def send_mail_user(email: str, name: str, message: str):
+    load_dotenv(PATH)
+    sender = "theimprovspot@gmail.com"
+    recipients = [sender, email]
+
+    msg = MIMEText(f' From: {name}\n Messege: {message}')
+    msg['Subject'] = "Messege from IMPROVspot"
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+        smtp_server.login(sender, os.getenv('PASSWORD'))
+        smtp_server.sendmail(sender, recipients, msg.as_string())
+
 def send_mail_self(email: str, name: str, message: str):
     load_dotenv(PATH)
     sender = "theimprovspot@gmail.com"
@@ -30,7 +44,7 @@ def send_mail_self(email: str, name: str, message: str):
     msg = MIMEText(f'From: {name}\n Email: {email}\n Messege: {message}')
     msg['Subject'] = "Messege from"
     msg['From'] = sender
-    msg['To'] = sender
+    msg['To'] = email
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
         smtp_server.login(sender, os.getenv('PASSWORD'))
