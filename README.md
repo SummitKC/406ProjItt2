@@ -15,4 +15,4 @@ The app's primary functions include tracking member attendance, recording paymen
 - **Class Sign Up:** Members sign up for classes with the option to pay up front or pay later.
 
 ##
-Note: Email functionality will be disabled with the conclusion of the project
+Note: Email functionality no longer works with the conclusion of the project and the associated account has been deleted
